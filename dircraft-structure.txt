@@ -1,0 +1,201 @@
+app/
+  (auth)/
+    login/
+      page.tsx
+    register/
+      page.tsx
+  api/
+    auth/
+      login/
+        route.ts
+      register/
+        route.ts
+    bookings/
+      cancel/
+        route.ts
+      create/
+        route.ts
+      list/
+        route.ts
+    contact/
+      route.ts
+    payments/
+      subscribe/
+        route.ts
+      webhook/
+        route.ts
+    public/
+      salon/
+        [slug]/
+          route.ts
+    queue/
+      add/
+        route.ts
+      list/
+        route.ts
+      remove/
+        route.ts
+    salon/
+      create/
+        route.ts
+      services/
+        list/
+          route.ts
+        route.ts
+      update/
+        route.ts
+    subscription/
+      status/
+        route.ts
+  dashboard/
+    bookings/
+      page.tsx
+    layout.tsx
+    no-access/
+      page.tsx
+    page.tsx
+    queue/
+      page.tsx
+    services/
+      page.tsx
+    settings/
+      page.tsx
+    setup/
+      page.tsx
+    staff/
+      page.tsx
+  demo/
+    page.tsx
+  faq/
+    page.tsx
+  pricing/
+    page.tsx
+  [salon]/
+    book/
+      page.tsx
+    page.tsx
+    queue/
+      page.tsx
+    services/
+      page.tsx
+  favicon.ico
+  globals.css
+  layout.tsx
+  page.tsx
+components/
+  dashboard/
+    BookingCard.tsx
+    Navbar.tsx
+    QueueItem.tsx
+    Sidebar.tsx
+  landing/
+    ContactSection.tsx
+    CTASection.tsx
+    FAQSection.tsx
+    FeatureCard.tsx
+    FeaturesSection.tsx
+    Footer.tsx
+    Hero.tsx
+    Navbar.tsx
+    PainPointsSection.tsx
+    PricingCard.tsx
+    PricingSection.tsx
+    ScreenshotsSection.tsx
+    TestimonialCard.tsx
+    TestimonialsSection.tsx
+    ValuePropositionSection.tsx
+  public-site/
+    Footer.tsx
+    Hero.tsx
+    ServiceList.tsx
+  ui/
+    Accordion.tsx
+    Badge.tsx
+    Button.tsx
+    Card.tsx
+    Input.tsx
+    Modal.tsx
+    Tabs.tsx
+context/
+  AuthContext.tsx
+  BookingContext.tsx
+  QueueContext.tsx
+  SalonContext.tsx
+data/
+  faq.ts
+  features.ts
+  testimonials.ts
+  valueProps.ts
+dircraft-structure.txt
+eslint.config.mjs
+hooks/
+  useAuth.ts
+  useBooking.ts
+  useQueue.ts
+  useSalon.ts
+  useScrollAnimation.ts
+lib/
+  auth.ts
+  dbConnect.js
+  emailTemplates.ts
+  helpers.ts
+  notifications.ts
+  razorpay.ts
+  subdomain.ts
+middleware.ts
+models/
+  Booking.ts
+  Contact.ts
+  Queue.ts
+  Salon.ts
+  Service.ts
+  Subscription.ts
+  User.ts
+next-env.d.ts
+next.config.ts
+package-lock.json
+package.json
+postcss.config.mjs
+public/
+  demo/
+    dashboard-preview.png
+    mobile-queue.png
+    public-booking.png
+    service-list.png
+  file.svg
+  globe.svg
+  icons/
+    calendar-check.svg
+    clock.svg
+    phone-off.svg
+    settings.svg
+    shield.svg
+    users.svg
+  illustrations/
+    hero-dashboard.png
+    hero-mobile.png
+  logo.svg
+  next.svg
+  salon-default.png
+  testimonials/
+    avatar-1.jpg
+    avatar-2.jpg
+    avatar-3.jpg
+  vercel.svg
+  window.svg
+README.md
+styles/
+  animations.css
+  landing.css
+tsconfig.json
+types/
+  landing.ts
+utils/
+  constants.ts
+  formatTime.ts
+  loadRazorpay.ts
+  validators/
+    authValidator.ts
+    contactValidator.ts
+    salonValidator.ts
+    serviceValidator.ts
