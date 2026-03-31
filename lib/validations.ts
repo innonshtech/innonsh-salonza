@@ -13,10 +13,10 @@ export const loginSchema = z.object({
 });
 
 export const salonCreateSchema = z.object({
-  ownerId: z.string().min(1, "Owner ID is required"),
   name: z.string().min(3, "Salon name must be at least 3 characters"),
   address: z.string().optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal(""))
+  phone: z.string().optional().or(z.literal("")),
+  slug: z.string().optional()
 });
 
 export const bookingCreateSchema = z.object({

@@ -56,8 +56,12 @@ export const metadata: Metadata = {
     images: ["/logo.png"],
   },
 
-  themeColor: "#6C4EFF",
   applicationName: "TrimSetGo",
+};
+
+// Viewport configuration (Next.js 14+)
+export const viewport = {
+  themeColor: "#6C4EFF",
 };
 
 export default function RootLayout({

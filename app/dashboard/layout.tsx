@@ -27,6 +27,9 @@ import {
   MessageCircle
 } from "lucide-react";
 
+// Check if payments are enabled on client side
+const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -57,8 +60,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       const salonData = JSON.parse(saved);
 
-      // Check subscription (Bypassed)
+      // Check subscription only if payments are enabled
+      if (PAYMENTS_ENABLED) {
+        try {
+          const res = await fetch(`/api/subscription/status?salonId=${salonData._id}`);
+          const data = await res.json();
+
+          if (!data.active) {
+            // Subscription expired or doesn't exist, redirect to no-access or settings
+            if (pathname !== "/dashboard/no-access") {
+              router.push("/dashboard/no-access");
+            }
+            setAllowed(false);
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to check subscription:", error);
+          // On error, allow access to avoid lockout
+          setAllowed(true);
+          return;
+        }
+      }
+
+      // Payments disabled or subscription active
       setAllowed(true);
+
+      // Redirect from no-access to dashboard if trying to access it
       if (pathname === "/dashboard/no-access") {
         router.push("/dashboard");
       }
