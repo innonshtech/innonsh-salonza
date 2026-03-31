@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
-import Subscription from "@/models/Subscription";
 import dbConnect from "@/lib/dbConnect";
+import Subscription from "@/models/Subscription";
+import { isPaymentsEnabled } from "@/lib/razorpay";
 
 export async function POST(req: Request) {
   await dbConnect();
+
+  // Feature flag: Ignore webhooks when payments are disabled
+  if (!isPaymentsEnabled()) {
+    return NextResponse.json({
+      success: true,
+      message: "Webhook received but payments are disabled. No action taken.",
+      mock: true,
+    });
+  }
 
   const body = await req.json();
 

@@ -39,6 +39,7 @@ export default function SettingsPage() {
 
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
   const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const paymentsEnabled = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
 
   useEffect(() => {
     const saved = localStorage.getItem("salon");
@@ -47,6 +48,12 @@ export default function SettingsPage() {
 
   async function startSubscription(type: 'basic' | 'pro') {
     if (!salon) return;
+
+    // Feature flag: block if payments disabled
+    if (!paymentsEnabled) {
+      alert("Payments are temporarily unavailable. Your subscription remains in trial mode.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -63,6 +70,13 @@ export default function SettingsPage() {
 
       if (!data.success) {
         alert("Failed to start subscription");
+        return;
+      }
+
+      // If mock response (payments disabled), show message
+      if (data.mock) {
+        alert(data.message || "Payments are temporarily disabled. Trial subscription activated.");
+        window.location.reload();
         return;
       }
 
@@ -462,13 +476,13 @@ export default function SettingsPage() {
 
                   <button
                     onClick={() => startSubscription(plan.type)}
-                    disabled={loading}
+                    disabled={loading || !paymentsEnabled}
                     className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${plan.popular
                       ? 'bg-purple-600 text-white hover:bg-purple-700'
                       : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                       }`}
                   >
-                    {loading ? 'Processing...' : 'Subscribe Now'}
+                    {loading ? 'Processing...' : !paymentsEnabled ? 'Payments Disabled' : 'Subscribe Now'}
                   </button>
                 </div>
 
@@ -485,18 +499,31 @@ export default function SettingsPage() {
           </div>
 
           {/* Payment Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+          <div className={`${paymentsEnabled ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'} border rounded-xl p-6`}>
             <div className="flex items-start space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Shield className="w-5 h-5 text-blue-600" />
+              <div className={`w-10 h-10 ${paymentsEnabled ? 'bg-blue-100' : 'bg-amber-100'} rounded-lg flex items-center justify-center flex-shrink-0">
+                <Shield className={`w-5 h-5 ${paymentsEnabled ? 'text-blue-600' : 'text-amber-600'}`} />
               </div>
               <div>
-                <h3 className="font-semibold text-blue-900 mb-1">Secure Payment</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li>• All payments are processed securely through Razorpay</li>
-                  <li>• 14-day free trial on all plans</li>
-                  <li>• Cancel anytime, no questions asked</li>
-                  <li>• Upgrade or downgrade your plan at any time</li>
+                <h3 className={`font-semibold ${paymentsEnabled ? 'text-blue-900' : 'text-amber-900'} mb-1`}>
+                  {paymentsEnabled ? 'Secure Payment' : 'Payments Temporarily Disabled'}
+                </h3>
+                <ul className={`text-sm ${paymentsEnabled ? 'text-blue-800' : 'text-amber-800'} space-y-1`}>
+                  {paymentsEnabled ? (
+                    <>
+                      <li>• All payments are processed securely through Razorpay</li>
+                      <li>• 14-day free trial on all plans</li>
+                      <li>• Cancel anytime, no questions asked</li>
+                      <li>• Upgrade or downgrade your plan at any time</li>
+                    </>
+                  ) : (
+                    <>
+                      <li>• Payment processing is currently disabled</li>
+                      <li>• All features remain available in trial mode</li>
+                      <li>• No charges will be made</li>
+                      <li>• You can upgrade later when payments are re-enabled</li>
+                    </>
+                  )}
                 </ul>
               </div>
             </div>
