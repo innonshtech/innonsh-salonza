@@ -1,30 +1,49 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Salon from "@/models/Salon";
-export async function POST(req: Request) {
+import { withAuth } from "@/lib/apiAuth";
+
+async function postHandler(req: Request) {
   try {
     const { name, email, message } = await req.json();
-    // Here you would typically save the contact message to your database
-    // or send it via email to your support team.
     return NextResponse.json({ success: true, message: "Contact message received. We'll get back to you shortly." });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message });
   }
 }
 
+async function putHandler(req: Request, decoded: any) {
+  try {
+    await dbConnect();
+    const { updates } = await req.json();
 
-export async function PUT(req: Request) {
-  await dbConnect();
-  const { salonId, updates } = await req.json();
+    // IDOR Elimination: Never trust salonId from body. Use decoded.salonId from JWT.
+    const salonId = decoded.salonId;
 
-  const updated = await Salon.findByIdAndUpdate(
-    salonId,
-    updates,
-    { new: true }
-  );
+    if (!salonId) {
+      return NextResponse.json({ success: false, message: "Forbidden: No salon associated with your account" }, { status: 403 });
+    }
 
-  return NextResponse.json({
-    success: true,
-    salon: updated
-  });
+    const updated = await Salon.findByIdAndUpdate(
+      salonId,
+      updates,
+      { new: true }
+    );
+
+    if (!updated) {
+      return NextResponse.json({ success: false, message: "Salon not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      salon: updated
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
 }
+
+// Protected for Salon Owners
+export const POST = withAuth(postHandler, ["salon_owner"]);
+export const PUT = withAuth(putHandler, ["salon_owner"]);
+

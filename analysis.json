@@ -1,0 +1,492 @@
+{
+  "apis": [
+    {
+      "endpoint": "/api/analytics/daily",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\analytics\\daily\\route.ts"
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\auth\\login\\route.ts"
+    },
+    {
+      "endpoint": "/api/auth/register",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\auth\\register\\route.ts"
+    },
+    {
+      "endpoint": "/api/bookings/by-phone",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\bookings\\by-phone\\route.ts"
+    },
+    {
+      "endpoint": "/api/bookings/cancel",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\bookings\\cancel\\route.ts"
+    },
+    {
+      "endpoint": "/api/bookings/create",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\bookings\\create\\route.ts"
+    },
+    {
+      "endpoint": "/api/bookings/create-multi",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\bookings\\create-multi\\route.ts"
+    },
+    {
+      "endpoint": "/api/bookings/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\bookings\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/clients/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\clients\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/clients/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\clients\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/contact",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\contact\\route.ts"
+    },
+    {
+      "endpoint": "/api/inventory/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\inventory\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/inventory/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\inventory\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/marketplace/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\marketplace\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/payments/subscribe",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\payments\\subscribe\\route.ts"
+    },
+    {
+      "endpoint": "/api/payments/webhook",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\payments\\webhook\\route.ts"
+    },
+    {
+      "endpoint": "/api/public/salon/[slug]",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\public\\salon\\[slug]\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/remove",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\remove\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/reorder",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\reorder\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/serve",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\serve\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/status",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\status\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/unserve",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\unserve\\route.ts"
+    },
+    {
+      "endpoint": "/api/queue/update",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\queue\\update\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/create",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\create\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/dashboard/stats",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\dashboard\\stats\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/gallery/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\gallery\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/gallery/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\gallery\\delete\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/gallery/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\gallery\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/offer/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\offer\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/offer/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\offer\\delete\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/offer/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\offer\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/services/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\services\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/services",
+      "methods": [
+        "POST",
+        "DELETE"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\services\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/testimonial/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\testimonial\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/update",
+      "methods": [
+        "POST",
+        "PUT"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\update\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/update-hours",
+      "methods": [
+        "PUT"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\update-hours\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/update-profile",
+      "methods": [
+        "PUT"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\update-profile\\route.ts"
+    },
+    {
+      "endpoint": "/api/salon/update-socials",
+      "methods": [
+        "PUT"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\salon\\update-socials\\route.ts"
+    },
+    {
+      "endpoint": "/api/staff/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\staff\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/staff/assign",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\staff\\assign\\route.ts"
+    },
+    {
+      "endpoint": "/api/staff/delete",
+      "methods": [
+        "DELETE"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\staff\\delete\\route.ts"
+    },
+    {
+      "endpoint": "/api/staff/list",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\staff\\list\\route.ts"
+    },
+    {
+      "endpoint": "/api/staff/status",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\staff\\status\\route.ts"
+    },
+    {
+      "endpoint": "/api/staff/update",
+      "methods": [
+        "PUT"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\staff\\update\\route.ts"
+    },
+    {
+      "endpoint": "/api/subscription/status",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\subscription\\status\\route.ts"
+    },
+    {
+      "endpoint": "/api/super-admin/stats",
+      "methods": [
+        "GET"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\super-admin\\stats\\route.ts"
+    },
+    {
+      "endpoint": "/api/super-admin/users/action",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\super-admin\\users\\action\\route.ts"
+    },
+    {
+      "endpoint": "/api/supplier/products/add",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\supplier\\products\\add\\route.ts"
+    },
+    {
+      "endpoint": "/api/supplier/verify",
+      "methods": [
+        "POST"
+      ],
+      "hasAuth": false,
+      "file": "\\app\\api\\supplier\\verify\\route.ts"
+    }
+  ],
+  "models": [
+    {
+      "name": "Booking",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Campaign",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Client",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Contact",
+      "fieldsPreview": "Unknown Schema..."
+    },
+    {
+      "name": "Feedback",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "MarketplaceProduct",
+      "fieldsPreview": "supplierId: { type: mongoose.Schema.Types.ObjectId, ref: \"User\", required: true..."
+    },
+    {
+      "name": "Membership",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Offer",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\"..."
+    },
+    {
+      "name": "Product",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Queue",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Sale",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Salon",
+      "fieldsPreview": "Unknown Schema..."
+    },
+    {
+      "name": "Service",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\"..."
+    },
+    {
+      "name": "Staff",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "Subscription",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\"..."
+    },
+    {
+      "name": "SupplierOrder",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\", required: true..."
+    },
+    {
+      "name": "SupplierSubscription",
+      "fieldsPreview": "supplierId: { type: mongoose.Schema.Types.ObjectId, ref: \"User\", required: true..."
+    },
+    {
+      "name": "Testimonial",
+      "fieldsPreview": "salonId: { type: mongoose.Schema.Types.ObjectId, ref: \"Salon\"..."
+    },
+    {
+      "name": "User",
+      "fieldsPreview": "name: { type: String, required: true..."
+    }
+  ]
+}

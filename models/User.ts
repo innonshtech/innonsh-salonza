@@ -18,7 +18,8 @@ const userSchema = new mongoose.Schema({
   businessAddress: String,
   businessLogo: String,
   businessDescription: String,
-
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   createdAt: { type: Date, default: Date.now }
 });
 

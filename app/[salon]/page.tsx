@@ -92,7 +92,7 @@ export default async function SalonPublicPage({ params }: any) {
                 Contact
               </a>
               <Link
-                href={`/book`}
+                href={`/${salonDoc.slug}/book`}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all"
               >
                 Book Now
@@ -141,7 +141,7 @@ export default async function SalonPublicPage({ params }: any) {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
               <Link
-                href={`/book`}
+                href={`/${salonDoc.slug}/book`}
                 className="inline-flex items-center space-x-3 px-10 py-5 bg-white text-purple-900 font-bold text-lg rounded-2xl hover:bg-purple-50 transition-all duration-300 shadow-2xl shadow-black/20 transform hover:scale-105"
               >
                 <Calendar className="w-6 h-6" />
@@ -328,7 +328,7 @@ export default async function SalonPublicPage({ params }: any) {
                   )}
 
                   <Link
-                    href={`/book`}
+                    href={`/${salonDoc.slug}/book`}
                     className="mt-6 w-full inline-flex items-center justify-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all opacity-0 group-hover:opacity-100"
                   >
                     <span>Book Now</span>
@@ -556,7 +556,7 @@ export default async function SalonPublicPage({ params }: any) {
                       <div className="text-5xl font-bold">₹{offer.discountedPrice}</div>
                     </div>
                     <Link
-                      href={`/book`}
+                      href={`/${salonDoc.slug}/book`}
                       className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-purple-600 font-bold rounded-xl hover:bg-purple-50 transition-all font-bold"
                       style={{ color: index % 2 === 0 ? '#9333ea' : '#2563eb' }}
                     >
@@ -590,7 +590,7 @@ export default async function SalonPublicPage({ params }: any) {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
-                  href={`/book`}
+                  href={`/${salonDoc.slug}/book`}
                   className="inline-flex items-center space-x-3 px-10 py-5 bg-white text-purple-900 font-bold text-lg rounded-2xl hover:bg-purple-50 transition-all duration-300 shadow-2xl shadow-black/20 transform hover:scale-105"
                 >
                   <Calendar className="w-6 h-6" />

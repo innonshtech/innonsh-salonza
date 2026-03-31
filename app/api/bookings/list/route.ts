@@ -1,17 +1,29 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Booking from "@/models/Booking";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function GET(req: Request) {
-  await dbConnect();
+async function getHandler(req: Request, decoded: any) {
+  try {
+    await dbConnect();
 
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
+    // IDOR Protection: Ignore the 'id' param and use 'salonId' from JWT
+    if (!decoded.salonId) {
+      return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
+    }
 
-  const bookings = await Booking.find({
-    salonId: id,
-    status: "upcoming",
-  }).sort({ date: 1 });
+    const bookings = await Booking.find({
+      salonId: decoded.salonId, // Forced from JWT
+      status: "upcoming",
+    })
+    .populate("serviceId")
+    .sort({ date: 1 });
 
-  return NextResponse.json({ success: true, bookings });
+    return NextResponse.json({ success: true, bookings });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
 }
+
+export const GET = withAuth(getHandler, ["salon_owner", "super_admin"]);
+

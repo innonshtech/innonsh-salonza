@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Scissors,
   Plus,
@@ -23,6 +24,7 @@ interface Service {
 }
 
 export default function ManageServices() {
+  const { token } = useAuth();
   const [salon, setSalon] = useState<any>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
@@ -67,7 +69,9 @@ export default function ManageServices() {
   async function loadServices(id: string) {
     try {
       setLoading(true);
-      const res = await fetch(`/api/salon/services/list?id=${encodeURIComponent(id)}`);
+      const res = await fetch(`/api/salon/services/list?id=${encodeURIComponent(id)}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       const data = await res.json();
       if (data?.services) {
         setServices(data.services);
@@ -154,7 +158,10 @@ export default function ManageServices() {
 
       const res = await fetch("/api/salon/services", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -232,7 +239,10 @@ export default function ManageServices() {
 
       const res = await fetch("/api/salon/services", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify(payload),
       });
 
@@ -258,7 +268,10 @@ export default function ManageServices() {
     try {
       const res = await fetch("/api/salon/services", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ id }),
       });
 

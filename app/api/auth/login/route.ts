@@ -4,7 +4,10 @@ import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { generateToken } from "@/lib/auth";
 import Salon from "@/models/Salon";
-export async function POST(req: Request) {
+import { withValidation } from "@/lib/validate";
+import { loginSchema } from "@/lib/validations";
+
+async function handler(req: Request) {
   try {
     await dbConnect();
     const { email, password } = await req.json();
@@ -21,21 +24,35 @@ export async function POST(req: Request) {
     }
 
     // create JWT
-    const token = generateToken({ userId: user._id });
+    const token = generateToken({ 
+      userId: user._id,
+      role: user.role,
+      salonId: user.salonId // Add this
+    });
     console.log("Generated token:", token);
-   return NextResponse.json({
-  success: true,
-  message: "Login successful",
-  token,
-  user,
-  salon: await Salon.findOne({ ownerId: user._id })
-});
+    const response = NextResponse.json({
+      success: true,
+      message: "Login successful",
+      user,
+      salon: await Salon.findOne({ ownerId: user._id })
+    });
 
- } catch (error: any) {
-  return NextResponse.json({
-    success: false,
-    message: error.message || "Something went wrong",
-  });
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: "/",
+    });
+
+    return response;
+  } catch (error: any) {
+    return NextResponse.json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
 }
 
-}
+export const POST = withValidation(loginSchema, handler);
+
