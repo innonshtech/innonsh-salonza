@@ -501,7 +501,7 @@ export default function SettingsPage() {
           {/* Payment Info */}
           <div className={`${paymentsEnabled ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'} border rounded-xl p-6`}>
             <div className="flex items-start space-x-3">
-              <div className={`w-10 h-10 ${paymentsEnabled ? 'bg-blue-100' : 'bg-amber-100'} rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className={`w-10 h-10 ${paymentsEnabled ? 'bg-blue-100' : 'bg-amber-100'} rounded-lg flex items-center justify-center flex-shrink-0`}>
                 <Shield className={`w-5 h-5 ${paymentsEnabled ? 'text-blue-600' : 'text-amber-600'}`} />
               </div>
               <div>
