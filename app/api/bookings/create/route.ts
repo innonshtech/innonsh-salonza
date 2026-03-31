@@ -1,12 +1,13 @@
-// app/api/bookings/create/route.ts
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Salon from "@/models/Salon";
 import Service from "@/models/Service";
 import Booking from "@/models/Booking";
 import { sendEmail, sendSMS } from "@/lib/notifications";
+import { withValidation } from "@/lib/validate";
+import { bookingCreateSchema } from "@/lib/validations";
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
   try {
     await dbConnect();
     const { salonSlug, serviceId, customerName, customerPhone, date } = await req.json();
@@ -59,3 +60,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, message: error.message });
   }
 }
+
+export const POST = withValidation(bookingCreateSchema, handler);
+

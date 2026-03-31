@@ -2,19 +2,17 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
+import { withValidation } from "@/lib/validate";
+import { registerSchema } from "@/lib/validations";
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
   try {
     await dbConnect();
     const { name, email, password, role } = await req.json();
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ success: false, message: "All fields required" });
-    }
-
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return NextResponse.json({ success: false, message: "Email already exists" });
+      return NextResponse.json({ success: false, message: "Email already exists" }, { status: 409 });
     }
 
     const hashed = await bcrypt.hash(password, 10);
@@ -30,7 +28,9 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: false,
       message: error.message || "Something went wrong",
-    });
+    }, { status: 500 });
   }
-
 }
+
+export const POST = withValidation(registerSchema, handler);
+

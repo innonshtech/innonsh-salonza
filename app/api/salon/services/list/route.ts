@@ -1,14 +1,30 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Service from "@/models/Service";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function GET(req: Request) {
-  await dbConnect();
+async function handler(req: Request, decoded: any) {
+  try {
+    await dbConnect();
+    
+    // IDOR Protection: Always use salonId from JWT for owners
+    const salonId = decoded.salonId;
+    if (!salonId && decoded.role !== "super_admin") {
+      return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
+    }
 
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
+    const { searchParams } = new URL(req.url);
+    const targetSalonId = decoded.role === "super_admin" ? (searchParams.get("id") || salonId) : salonId;
 
-  const services = await Service.find({ salonId: id });
+    if (!targetSalonId) {
+      return NextResponse.json({ success: false, message: "salonId is required" }, { status: 400 });
+    }
 
-  return NextResponse.json({ success: true, services });
+    const services = await Service.find({ salonId: targetSalonId });
+    return NextResponse.json({ success: true, services });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  }
 }
+
+export const GET = withAuth(handler, ["salon_owner", "super_admin"]);

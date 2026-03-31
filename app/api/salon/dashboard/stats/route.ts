@@ -4,15 +4,24 @@ import Booking from "@/models/Booking";
 import Queue from "@/models/Queue";
 import Service from "@/models/Service";
 import moment from "moment";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function GET(req: Request) {
+async function handler(req: Request, decoded: any) {
     try {
         await dbConnect();
-        const { searchParams } = new URL(req.url);
-        const salonId = searchParams.get("salonId");
+        
+        // IDOR Protection: Always use salonId from JWT for owners
+        const salonIdFromToken = decoded.salonId;
+        if (!salonIdFromToken && decoded.role !== "super_admin") {
+            return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
+        }
 
-        if (!salonId) {
-            return NextResponse.json({ success: false, message: "salonId is required" });
+        const { searchParams } = new URL(req.url);
+        // If super_admin, they can request any salonId. If salon_owner, they only see their own.
+        const targetSalonId = decoded.role === "super_admin" ? (searchParams.get("salonId") || salonIdFromToken) : salonIdFromToken;
+
+        if (!targetSalonId) {
+            return NextResponse.json({ success: false, message: "salonId is required" }, { status: 400 });
         }
 
         const todayStart = moment().startOf('day').toDate();
@@ -21,29 +30,29 @@ export async function GET(req: Request) {
 
         // 1. Today's Bookings
         const todayBookingsCount = await Booking.countDocuments({
-            salonId,
+            salonId: targetSalonId,
             date: { $gte: todayStart, $lte: todayEnd }
         });
 
         // 2. Active Queue (Waiting or Unassigned status)
         const activeQueueCount = await Queue.countDocuments({
-            salonId,
+            salonId: targetSalonId,
             status: { $ne: "serving" }
         });
 
         // 3. Total Services
-        const totalServicesCount = await Service.countDocuments({ salonId });
+        const totalServicesCount = await Service.countDocuments({ salonId: targetSalonId });
 
         // 4. Monthly Revenue
         const completedBookingsThisMonth = await Booking.find({
-            salonId,
+            salonId: targetSalonId,
             status: "completed",
             date: { $gte: monthStart }
         });
         const monthlyRevenue = completedBookingsThisMonth.reduce((sum, b) => sum + (b.totalPrice || 0), 0);
 
         // 5. Recent Activity (Last 5 bookings or queue entries)
-        const recentBookings = await Booking.find({ salonId })
+        const recentBookings = await Booking.find({ salonId: targetSalonId })
             .populate("serviceIds")
             .sort({ createdAt: -1 })
             .limit(5)
@@ -51,7 +60,7 @@ export async function GET(req: Request) {
 
         // 6. Today's Schedule
         const todaysSchedule = await Booking.find({
-            salonId,
+            salonId: targetSalonId,
             date: { $gte: todayStart, $lte: todayEnd }
         })
             .populate("serviceIds")
@@ -70,6 +79,8 @@ export async function GET(req: Request) {
             todaysSchedule: todaysSchedule
         });
     } catch (err: any) {
-        return NextResponse.json({ success: false, error: err.message });
+        return NextResponse.json({ success: false, error: err.stack }, { status: 500 });
     }
 }
+
+export const GET = withAuth(handler, ["salon_owner", "super_admin"]);

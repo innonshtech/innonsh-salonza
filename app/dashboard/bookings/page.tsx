@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Calendar, 
   Clock, 
@@ -31,6 +32,7 @@ interface Booking {
 }
 
 export default function BookingsPage() {
+  const { token } = useAuth();
   const [salon, setSalon] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
@@ -57,7 +59,9 @@ export default function BookingsPage() {
   async function loadBookings(id: string) {
     setLoading(true);
     try {
-      const res = await fetch(`/api/bookings/list?id=${id}`);
+      const res = await fetch(`/api/bookings/list?id=${id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       const data = await res.json();
       setBookings(data.bookings || []);
     } catch (error) {

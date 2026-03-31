@@ -3,8 +3,9 @@ import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import Salon from "@/models/Salon";
 import MarketplaceProduct from "@/models/MarketplaceProduct";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function GET() {
+async function handler(req: Request) {
     try {
         await dbConnect();
 
@@ -32,3 +33,6 @@ export async function GET() {
         });
     }
 }
+
+export const GET = withAuth(handler, ["super_admin"]);
+

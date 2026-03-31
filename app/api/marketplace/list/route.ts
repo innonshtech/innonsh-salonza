@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import MarketplaceProduct from "@/models/MarketplaceProduct";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function GET(req: Request) {
+async function handler(req: Request) {
     try {
         await dbConnect();
         const { searchParams } = new URL(req.url);
@@ -19,6 +20,8 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ success: true, products });
     } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message });
+        return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 }
+
+export const GET = withAuth(handler, ["salon_owner", "super_admin", "supplier"]);

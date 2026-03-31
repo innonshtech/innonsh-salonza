@@ -11,7 +11,7 @@ export async function GET(req: Request) {
   const sub = await Subscription.findOne({ salonId });
     console.log("Fetched subscription for salonId", salonId, ":", sub);
   return NextResponse.json({
-    active: sub?.status === "active",
+    active: true, // sub?.status === "active", Bypassed
     subscription: sub || null,
   });
 }

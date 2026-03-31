@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
   Users,
   UserPlus,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 
 export default function StaffPage() {
+  const { token } = useAuth();
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -37,7 +39,9 @@ export default function StaffPage() {
   // Load staff
   const loadStaff = async () => {
     try {
-      const res = await fetch(`/api/staff/list?salonId=${salon._id}`);
+      const res = await fetch(`/api/staff/list?salonId=${salon._id}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
       const data = await res.json();
       setStaff(data.staff || []);
     } catch (err) {
@@ -65,6 +69,10 @@ export default function StaffPage() {
     try {
       const res = await fetch("/api/staff/add", {
         method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           salonId: salon._id,
           name: newStaff.name,
@@ -94,6 +102,10 @@ export default function StaffPage() {
   const updateStatus = async (staffId: string, status: string) => {
     const res = await fetch("/api/staff/status", {
       method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ staffId, status }),
     });
 
@@ -107,6 +119,10 @@ export default function StaffPage() {
 
     const res = await fetch("/api/staff/delete", {
       method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ staffId }),
     });
 

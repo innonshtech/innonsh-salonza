@@ -1,22 +1,29 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Staff from "@/models/Staff";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function POST(req: Request) {
-  await dbConnect();
-
+async function handler(req: Request, decoded: any) {
   try {
-    const body = await req.json();
-    const { staffId, status } = body;
+    await dbConnect();
+    const { staffId, status } = await req.json();
 
-    const staff = await Staff.findByIdAndUpdate(
+    // IDOR Protection: Verify ownership
+    const staffMember = await Staff.findById(staffId);
+    if (!staffMember || staffMember.salonId.toString() !== decoded.salonId.toString()) {
+       return NextResponse.json({ success: false, message: "Forbidden: You do not own this resource" }, { status: 403 });
+    }
+
+    const updatedStaff = await Staff.findByIdAndUpdate(
       staffId,
       { currentStatus: status },
       { new: true }
     );
 
-    return NextResponse.json({ success: true, staff });
-  } catch (err) {
-    return NextResponse.json({ success: false, message: "Status update failed" });
+    return NextResponse.json({ success: true, staff: updatedStaff });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message || "Status update failed" }, { status: 500 });
   }
 }
+
+export const POST = withAuth(handler, ["salon_owner", "super_admin"]);

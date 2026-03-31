@@ -43,8 +43,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setSalon(JSON.parse(saved));
       }
 
-      // Allow user to access setup & no-access pages freely
-      if (pathname === "/dashboard/setup" || pathname === "/dashboard/no-access" || pathname === "/dashboard/settings") {
+      // Allow user to access setup & settings pages freely
+      if (pathname === "/dashboard/setup" || pathname === "/dashboard/settings") {
         setAllowed(true);
         return;
       }
@@ -57,14 +57,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       const salonData = JSON.parse(saved);
 
-      // Check subscription
-      const res = await fetch(`/api/subscription/status?salonId=${salonData._id}`);
-      const data = await res.json();
-
-      if (!data.active) {
-        router.push("/dashboard/no-access");
-      } else {
-        setAllowed(true);
+      // Check subscription (Bypassed)
+      setAllowed(true);
+      if (pathname === "/dashboard/no-access") {
+        router.push("/dashboard");
       }
     }
 

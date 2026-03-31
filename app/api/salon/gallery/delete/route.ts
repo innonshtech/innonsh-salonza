@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Salon from "@/models/Salon";
+import { withAuth } from "@/lib/apiAuth";
 
-export async function DELETE(req: Request) {
+async function handler(req: Request, decoded: any) {
   try {
     await dbConnect();
+    const { imageUrl } = await req.json();
 
-    const { salonId, imageUrl } = await req.json();
+    // IDOR Protection: Always use salonId from JWT
+    const salonId = decoded.salonId;
+    if (!salonId) {
+      return NextResponse.json({ success: false, message: "Forbidden: No salon associated" }, { status: 403 });
+    }
 
-    if (!salonId || !imageUrl) {
-      return NextResponse.json({
-        success: false,
-        message: "salonId and imageUrl are required",
-      });
+    if (!imageUrl) {
+      return NextResponse.json({ success: false, message: "imageUrl is required" }, { status: 400 });
     }
 
     // Remove image from gallery array
@@ -23,10 +26,7 @@ export async function DELETE(req: Request) {
     );
 
     if (!updated) {
-      return NextResponse.json({
-        success: false,
-        message: "Salon not found",
-      });
+      return NextResponse.json({ success: false, message: "Salon not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -36,9 +36,8 @@ export async function DELETE(req: Request) {
     });
   } catch (err: any) {
     console.error("Delete gallery image error:", err);
-    return NextResponse.json({
-      success: false,
-      message: err.message || "Server error",
-    });
+    return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
 }
+
+export const DELETE = withAuth(handler, ["salon_owner", "super_admin"]);
