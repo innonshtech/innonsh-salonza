@@ -13,6 +13,7 @@ const ClientSchema = new mongoose.Schema({
     totalSpent: { type: Number, default: 0 },
     lastVisit: Date,
 
+    rating: { type: Number, min: 1, max: 5, default: 0 }, // 0 means not rated yet
     notes: String,
     tags: [String],
 

@@ -20,6 +20,8 @@ import {
   Palette
 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/components/ui/Toast";
+import { uploadImage, CLOUDINARY_ENABLED } from "@/lib/cloudinary";
 
 interface Salon {
   _id: string;
@@ -32,14 +34,14 @@ interface Salon {
 }
 
 export default function SettingsPage() {
+  const { showToast } = useToast();
   const [salon, setSalon] = useState<Salon | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'subscription'>('general');
   const [uploading, setUploading] = useState(false);
 
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
   const paymentsEnabled = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
+  const cloudinaryEnabled = CLOUDINARY_ENABLED;
 
   useEffect(() => {
     const saved = localStorage.getItem("salon");
@@ -117,16 +119,20 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file || !salon) return;
 
+    // Check if Cloudinary is enabled
+    if (!cloudinaryEnabled) {
+      showToast("Image upload is currently disabled", "error");
+      return;
+    }
+
     setUploading(true);
     try {
-      const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", uploadPreset!);
+      const result = await uploadImage(file);
 
-      const res = await fetch(url, { method: "POST", body: fd });
-      const data = await res.json();
-      const imageUrl = data.secure_url;
+      if (result.error) {
+        showToast(result.error, "error");
+        return;
+      }
 
       // Update salon profile
       const updateRes = await fetch("/api/salon/update-profile", {
@@ -134,21 +140,23 @@ export default function SettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           salonId: salon._id,
-          updates: { mainImage: imageUrl }
+          updates: { mainImage: result.url }
         }),
       });
 
       const updateData = await updateRes.json();
       if (updateData.success) {
-        const updatedSalon = { ...salon, mainImage: imageUrl };
+        const updatedSalon = { ...salon, mainImage: result.url };
         setSalon(updatedSalon);
         localStorage.setItem("salon", JSON.stringify(updatedSalon));
-        alert("Salon image updated successfully!");
+        showToast("Salon image updated successfully!", "success");
+      } else {
+        showToast(updateData.message || "Failed to update image", "error");
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload error:", error);
-      alert("Failed to upload image");
+      showToast(error.message || "Failed to upload image", "error");
     } finally {
       setUploading(false);
     }
@@ -350,15 +358,15 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
-                <label className="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors cursor-pointer disabled:opacity-50">
+                <label className="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   <Upload className="w-5 h-5 mr-2" />
-                  <span>{uploading ? 'Uploading...' : 'Choose Image'}</span>
+                  <span>{uploading ? 'Uploading...' : !cloudinaryEnabled ? 'Uploads Disabled' : 'Choose Image'}</span>
                   <input
                     type="file"
                     className="hidden"
                     accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={uploading}
+                    onChange={cloudinaryEnabled ? handleImageUpload : undefined}
+                    disabled={uploading || !cloudinaryEnabled}
                   />
                 </label>
               </div>

@@ -98,6 +98,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/Toast";
 import {
     Star,
     MessageCircle,
@@ -111,70 +113,139 @@ import {
     Calendar,
     Loader2,
     PieChart,
-    TrendingDown
+    TrendingDown,
+    X
 } from "lucide-react";
 
 export default function FeedbackPage() {
+    const { showToast } = useToast();
+    const { token } = useAuth();
     const [salon, setSalon] = useState<any>(null);
-    const [reviews, setReviews] = useState([
-        {
-            id: 1,
-            customerName: "John Doe",
-            service: "Haircut & Styling",
-            timeAgo: "2 hours ago",
-            rating: 5,
-            comment: "Amazing service! The stylist really understood what I wanted. Definitely coming back.",
-            sentiment: "positive",
-            verified: true
-        },
-        {
-            id: 2,
-            customerName: "Sarah Johnson",
-            service: "Hair Coloring",
-            timeAgo: "1 day ago",
-            rating: 4,
-            comment: "Good coloring service. The color came out nice, but the wait time was a bit longer than expected.",
-            sentiment: "positive",
-            verified: true
-        },
-        {
-            id: 3,
-            customerName: "Mike Wilson",
-            service: "Beard Trim",
-            timeAgo: "3 days ago",
-            rating: 2,
-            comment: "Stylist seemed rushed and didn't pay attention to details. Expected better for the price.",
-            sentiment: "negative",
-            verified: false
-        }
-    ]);
-
+    const [reviews, setReviews] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [filter, setFilter] = useState("all");
     const [loading, setLoading] = useState(true);
+    const [showFormModal, setShowFormModal] = useState(false);
+    const [feedbackForm, setFeedbackForm] = useState({
+        customerName: "",
+        rating: 5,
+        comment: ""
+    });
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         const saved = localStorage.getItem("salon");
         if (saved) {
             const s = JSON.parse(saved);
             setSalon(s);
-            // You can fetch reviews here if you have an API
-            // fetchReviews(s._id);
+            loadFeedback(s._id);
+        } else {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
-    const filteredReviews = reviews.filter(review => {
-        const matchesSearch = review.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                             review.comment.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filter === "all" || review.sentiment === filter;
-        return matchesSearch && matchesFilter;
-    });
+    async function loadFeedback(salonId: string) {
+        try {
+            const headers: HeadersInit = { "Content-Type": "application/json" };
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+            const res = await fetch(`/api/feedback?salonId=${salonId}`, { headers });
+            const data = await res.json();
+            if (data.success) {
+                // Transform feedback to include sentiment and map _id to id
+                const feedbackWithSentiment = (data.feedback || []).map((f: any) => ({
+                    ...f,
+                    id: f._id,
+                    sentiment: f.rating >= 4 ? "positive" : f.rating <= 2 ? "negative" : "neutral"
+                }));
+                setReviews(feedbackWithSentiment);
+            } else {
+                console.error("Failed to load feedback:", data.message);
+                setReviews([]);
+            }
+        } catch (error) {
+            console.error("Error loading feedback:", error);
+            showToast("Failed to load feedback", "error");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function getTimeAgo(date: Date) {
+        const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+        if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+        if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+        return `${Math.floor(seconds / 86400)} days ago`;
+    }
+
+    async function handleSubmitFeedback(e: React.FormEvent) {
+        e.preventDefault();
+        setSubmitting(true);
+
+        if (!salon) {
+            showToast("Salon not found. Please refresh the page.", "error");
+            setSubmitting(false);
+            return;
+        }
+
+        try {
+            const headers: HeadersInit = {
+                "Content-Type": "application/json"
+            };
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+
+            const res = await fetch(`/api/feedback`, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({
+                    ...feedbackForm,
+                    salonId: salon._id
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                // Add to reviews list
+                const newReview = {
+                    id: data.feedback._id,
+                    ...feedbackForm,
+                    sentiment: feedbackForm.rating >= 4 ? "positive" : feedbackForm.rating <= 2 ? "negative" : "neutral",
+                    createdAt: new Date(),
+                    timeAgo: "Just now"
+                };
+                setReviews([newReview, ...reviews]);
+                setShowFormModal(false);
+                setFeedbackForm({ customerName: "", rating: 5, comment: "" });
+                showToast("Feedback submitted successfully!", "success");
+            } else {
+                showToast(data.message || "Failed to submit feedback", "error");
+            }
+        } catch (error) {
+            console.error("Error submitting feedback:", error);
+            showToast("Failed to submit feedback", "error");
+        } finally {
+            setSubmitting(false);
+        }
+    }
 
     const totalReviews = reviews.length;
     const positiveReviews = reviews.filter(r => r.sentiment === "positive").length;
+    const negativeReviews = reviews.filter(r => r.sentiment === "negative").length;
     const averageRating = totalReviews > 0 ? (reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1) : "0.0";
-    const negativeReviews = totalReviews - positiveReviews;
+
+    // Add timeAgo and filter reviews
+    const displayReviews = reviews.map(r => ({ ...r, timeAgo: getTimeAgo(new Date(r.createdAt)) }));
+    const filteredReviews = displayReviews.filter(review => {
+        const name = review.customerName || '';
+        const comment = review.comment || '';
+        const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             comment.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filter === "all" || review.sentiment === filter;
+        return matchesSearch && matchesFilter;
+    });
 
     if (loading) {
         return (
@@ -191,10 +262,21 @@ export default function FeedbackPage() {
         <div className="space-y-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-semibold text-slate-900">Customer Feedback</h1>
-                <p className="mt-1 text-sm text-slate-600">
-                    Analyze customer satisfaction and reviews for {salon?.name || "your salon"}
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-slate-900">Customer Feedback</h1>
+                        <p className="mt-1 text-sm text-slate-600">
+                            Analyze customer satisfaction and reviews for {salon?.name || "your salon"}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setShowFormModal(true)}
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        <MessageCircle className="w-4 h-4" />
+                        Add Feedback
+                    </button>
+                </div>
             </div>
 
             {/* Stats */}
@@ -301,13 +383,11 @@ export default function FeedbackPage() {
                                 <div className="flex justify-between items-start mb-3">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-700 font-semibold text-sm">
-                                            {review.customerName.charAt(0).toUpperCase()}
+                                            {review.customerName?.charAt(0).toUpperCase() || 'U'}
                                         </div>
                                         <div>
-                                            <div className="font-medium text-slate-900 text-sm">{review.customerName}</div>
+                                            <div className="font-medium text-slate-900 text-sm">{review.customerName || 'Anonymous'}</div>
                                             <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
-                                                <span>{review.service}</span>
-                                                <span>•</span>
                                                 <span>{review.timeAgo}</span>
                                             </div>
                                         </div>
@@ -316,35 +396,35 @@ export default function FeedbackPage() {
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <Star
                                                 key={star}
-                                                className={`w-3.5 h-3.5 ${star <= review.rating ? 'text-amber-500 fill-amber-500' : 'text-amber-200 fill-amber-200'}`}
+                                                className={`w-3.5 h-3.5 ${star <= (review.rating || 0) ? 'text-amber-500 fill-amber-500' : 'text-amber-200 fill-amber-200'}`}
                                             />
                                         ))}
                                     </div>
                                 </div>
-                                
+
                                 <p className="text-sm text-slate-600 leading-relaxed mb-3">
                                     "{review.comment}"
                                 </p>
-                                
+
                                 <div className="flex items-center gap-2">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${review.sentiment === 'positive' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${review.sentiment === 'positive' ? 'bg-emerald-50 text-emerald-700' : review.sentiment === 'negative' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'}`}>
                                         {review.sentiment === 'positive' ? (
                                             <div className="flex items-center gap-1">
                                                 <ThumbsUp className="w-3 h-3" />
                                                 Positive
                                             </div>
-                                        ) : (
+                                        ) : review.sentiment === 'negative' ? (
                                             <div className="flex items-center gap-1">
                                                 <ThumbsDown className="w-3 h-3" />
                                                 Negative
                                             </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1">
+                                                <Star className="w-3 h-3" />
+                                                Neutral
+                                            </div>
                                         )}
                                     </span>
-                                    {review.verified && (
-                                        <span className="px-2 py-0.5 bg-slate-50 text-slate-600 rounded text-xs font-medium border border-slate-200">
-                                            Verified Visit
-                                        </span>
-                                    )}
                                 </div>
                             </div>
                         ))
@@ -433,6 +513,87 @@ export default function FeedbackPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Add Feedback Modal */}
+            {showFormModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl w-full max-w-md shadow-lg overflow-hidden border border-slate-200">
+                        <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-5 text-white">
+                            <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-lg font-semibold">Add Customer Feedback</h3>
+                                <button
+                                    onClick={() => setShowFormModal(false)}
+                                    className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="text-purple-200 text-xs">Record customer feedback with rating</p>
+                        </div>
+
+                        <form onSubmit={handleSubmitFeedback} className="p-5 space-y-4">
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Customer Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={feedbackForm.customerName}
+                                    onChange={(e) => setFeedbackForm({ ...feedbackForm, customerName: e.target.value })}
+                                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                    placeholder="Enter customer name"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Rating (1-5)</label>
+                                <div className="flex items-center gap-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setFeedbackForm({ ...feedbackForm, rating: star })}
+                                            className="p-1"
+                                        >
+                                            <Star
+                                                className={`w-8 h-8 ${star <= feedbackForm.rating ? 'text-amber-500 fill-amber-500' : 'text-slate-300'}`}
+                                            />
+                                        </button>
+                                    ))}
+                                    <span className="ml-2 text-sm font-medium text-slate-700">{feedbackForm.rating} / 5</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-medium text-slate-700 mb-1">Comment</label>
+                                <textarea
+                                    value={feedbackForm.comment}
+                                    onChange={(e) => setFeedbackForm({ ...feedbackForm, comment: e.target.value })}
+                                    className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                    rows={3}
+                                    placeholder="Enter customer feedback..."
+                                />
+                            </div>
+
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowFormModal(false)}
+                                    className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-medium rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="flex-1 py-2.5 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors text-sm disabled:opacity-50"
+                                >
+                                    {submitting ? "Submitting..." : "Submit Feedback"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

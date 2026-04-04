@@ -6,22 +6,37 @@ import { withAuth } from "@/lib/apiAuth";
 async function handler(req: Request, decoded: any) {
   try {
     await dbConnect();
-    const { staffId } = await req.json();
+    const body = await req.json();
+    const { staffId } = body;
 
-    // Verify ownership before deleting/disabling
-    const staffMember = await Staff.findById(staffId);
-    if (!staffMember || staffMember.salonId.toString() !== decoded.salonId.toString()) {
-       return NextResponse.json({ success: false, message: "Forbidden: You do not own this resource" }, { status: 403 });
+    console.log("Staff delete request body:", body);
+    console.log("Deleting staff ID:", staffId);
+
+    if (!staffId) {
+      return NextResponse.json({ success: false, message: "staffId is required" }, { status: 400 });
     }
 
-    const staff = await Staff.findByIdAndUpdate(
-      staffId,
-      { active: false },
-      { new: true }
-    );
+    // Find staff member
+    const staffMember = await Staff.findById(staffId);
+    if (!staffMember) {
+      return NextResponse.json({ success: false, message: "Staff member not found" }, { status: 404 });
+    }
 
-    return NextResponse.json({ success: true, message: "Staff disabled", staff });
+    // Ownership check: super_admin can delete any, others must own the staff
+    if (decoded.role !== "super_admin" && staffMember.salonId.toString() !== decoded.salonId?.toString()) {
+      return NextResponse.json({ success: false, message: "Forbidden: You do not own this resource" }, { status: 403 });
+    }
+
+    // Hard delete
+    const deletedStaff = await Staff.findByIdAndDelete(staffId);
+
+    return NextResponse.json({
+      success: true,
+      message: "Staff member deleted successfully",
+      staff: deletedStaff
+    });
   } catch (err: any) {
+    console.error("Error deleting staff:", err);
     return NextResponse.json({ success: false, message: err.message || "Failed to delete staff" }, { status: 500 });
   }
 }

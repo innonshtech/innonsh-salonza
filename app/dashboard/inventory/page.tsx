@@ -341,6 +341,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import {
     Package,
     Plus,
@@ -361,6 +362,7 @@ import {
 } from "lucide-react";
 
 export default function InventoryPage() {
+    const { showToast } = useToast();
     const [salon, setSalon] = useState<any>(null);
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -368,7 +370,7 @@ export default function InventoryPage() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("all");
 
-    // Form state
+    // Form state for adding
     const [formData, setFormData] = useState({
         name: "",
         category: "Hair Care",
@@ -378,6 +380,19 @@ export default function InventoryPage() {
         minStockAlert: 5,
         unit: "pcs"
     });
+
+    // Edit state
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editFormData, setEditFormData] = useState({
+        name: "",
+        category: "Hair Care",
+        price: 0,
+        costPrice: 0,
+        stockCount: 0,
+        minStockAlert: 5,
+        unit: "pcs"
+    });
+    const [showEditModal, setShowEditModal] = useState(false);
 
     useEffect(() => {
         const saved = localStorage.getItem("salon");
@@ -395,9 +410,12 @@ export default function InventoryPage() {
             const data = await res.json();
             if (data.success) {
                 setProducts(data.products);
+            } else {
+                showToast(data.message || "Failed to load inventory", "error");
             }
         } catch (error) {
             console.error("Error fetching inventory:", error);
+            showToast("Failed to load inventory", "error");
         } finally {
             setLoading(false);
         }
@@ -416,9 +434,13 @@ export default function InventoryPage() {
                 setShowAddModal(false);
                 setFormData({ name: "", category: "Hair Care", price: 0, costPrice: 0, stockCount: 0, minStockAlert: 5, unit: "pcs" });
                 fetchInventory(salon._id);
+                showToast("Product added successfully!", "success");
+            } else {
+                showToast(data.message || "Failed to add product", "error");
             }
         } catch (error) {
             console.error("Error adding product:", error);
+            showToast("Failed to add product", "error");
         }
     }
 
@@ -433,9 +455,55 @@ export default function InventoryPage() {
             const data = await res.json();
             if (data.success) {
                 fetchInventory(salon._id);
+                showToast("Product deleted successfully!", "success");
+            } else {
+                showToast(data.message || "Failed to delete product", "error");
             }
         } catch (error) {
             console.error("Error deleting product:", error);
+            showToast("Failed to delete product", "error");
+        }
+    }
+
+    function startEdit(product: any) {
+        setEditingId(product._id);
+        setEditFormData({
+            name: product.name || "",
+            category: product.category || "Hair Care",
+            price: product.price || 0,
+            costPrice: product.costPrice || 0,
+            stockCount: product.stockCount || 0,
+            minStockAlert: product.minStockAlert || 5,
+            unit: product.unit || "pcs"
+        });
+        setShowEditModal(true);
+    }
+
+    async function handleUpdateProduct(e: React.FormEvent) {
+        e.preventDefault();
+        if (!editingId) return;
+
+        try {
+            const res = await fetch(`/api/inventory/update`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: editingId,
+                    ...editFormData
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setShowEditModal(false);
+                setEditingId(null);
+                fetchInventory(salon._id);
+                showToast("Product updated successfully!", "success");
+            } else {
+                showToast(data.message || "Failed to update product", "error");
+            }
+        } catch (error) {
+            console.error("Error updating product:", error);
+            showToast("Failed to update product", "error");
         }
     }
 
@@ -602,7 +670,11 @@ export default function InventoryPage() {
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-center gap-1">
-                                                <button className="p-1.5 text-slate-400 hover:text-purple-600 transition-colors rounded hover:bg-purple-50">
+                                                <button
+                                                    onClick={() => startEdit(p)}
+                                                    className="p-1.5 text-slate-400 hover:text-purple-600 transition-colors rounded hover:bg-purple-50"
+                                                    title="Edit product"
+                                                >
                                                     <Edit3 className="w-4 h-4" />
                                                 </button>
                                                 <button 
@@ -759,6 +831,133 @@ export default function InventoryPage() {
                                     className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors text-sm"
                                 >
                                     Save Product
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Product Modal */}
+            {showEditModal && editingId && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl w-full max-w-md shadow-lg overflow-hidden border border-slate-200">
+                        <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-5 text-white">
+                            <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-lg font-semibold">Edit Product</h3>
+                                <button
+                                    onClick={() => { setShowEditModal(false); setEditingId(null); }}
+                                    className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <p className="text-slate-400 text-xs">Update product details</p>
+                        </div>
+
+                        <form onSubmit={handleUpdateProduct} className="p-5 space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Product Name *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        value={editFormData.name}
+                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                        placeholder="e.g. Argan Oil Shampoo"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Category</label>
+                                    <select
+                                        value={editFormData.category}
+                                        onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                    >
+                                        <option>Hair Care</option>
+                                        <option>Skin Care</option>
+                                        <option>Coloring</option>
+                                        <option>Tools</option>
+                                        <option>Accessories</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Unit</label>
+                                    <select
+                                        value={editFormData.unit}
+                                        onChange={(e) => setEditFormData({ ...editFormData, unit: e.target.value })}
+                                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                    >
+                                        <option>pcs</option>
+                                        <option>ml</option>
+                                        <option>grams</option>
+                                        <option>liters</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Buying Price (Cost)</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
+                                        <input
+                                            type="number"
+                                            value={editFormData.costPrice || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, costPrice: Number(e.target.value) })}
+                                            className="w-full pl-8 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Selling Price</label>
+                                    <div className="relative">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
+                                        <input
+                                            type="number"
+                                            value={editFormData.price || ''}
+                                            onChange={(e) => setEditFormData({ ...editFormData, price: Number(e.target.value) })}
+                                            className="w-full pl-8 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Stock Count</label>
+                                    <input
+                                        type="number"
+                                        value={editFormData.stockCount || ''}
+                                        onChange={(e) => setEditFormData({ ...editFormData, stockCount: Number(e.target.value) })}
+                                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1">Min Stock Alert</label>
+                                    <input
+                                        type="number"
+                                        value={editFormData.minStockAlert || ''}
+                                        onChange={(e) => setEditFormData({ ...editFormData, minStockAlert: Number(e.target.value) })}
+                                        className="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none font-medium text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => { setShowEditModal(false); setEditingId(null); }}
+                                    className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-medium rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-medium rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors text-sm"
+                                >
+                                    Update Product
                                 </button>
                             </div>
                         </form>

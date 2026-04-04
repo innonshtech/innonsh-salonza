@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Image as ImageIcon, Plus, Trash2, Loader2, X } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import { uploadImage, CLOUDINARY_ENABLED } from "@/lib/cloudinary";
 
 export default function ManageGallery() {
+  const { showToast } = useToast();
   const [salon, setSalon] = useState<any>(null);
   const [gallery, setGallery] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -12,8 +15,7 @@ export default function ManageGallery() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const cloudinaryEnabled = CLOUDINARY_ENABLED;
 
   useEffect(() => {
     const saved = localStorage.getItem("salon");
@@ -35,6 +37,7 @@ export default function ManageGallery() {
       }
     } catch (err) {
       console.error("Gallery load error:", err);
+      showToast("Failed to load gallery", "error");
     } finally {
       setInitialLoading(false);
     }
@@ -46,20 +49,25 @@ export default function ManageGallery() {
     if (file) setPreview(URL.createObjectURL(file));
   }
 
-  async function uploadToCloudinary(file: File) {
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", uploadPreset!);
+  async function uploadToCloudinary(file: File): Promise<string> {
+    const result = await uploadImage(file);
 
-    const res = await fetch(url, { method: "POST", body: fd });
-    const data = await res.json();
-    return data.secure_url;
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    return result.url;
   }
 
   async function addImage(e: React.FormEvent) {
     e.preventDefault();
     if (!imageFile || !salon) return;
+
+    // Check if Cloudinary is enabled
+    if (!cloudinaryEnabled) {
+      showToast("Image upload is currently disabled", "error");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -77,8 +85,9 @@ export default function ManageGallery() {
       setPreview(null);
       setImageFile(null);
       await loadGallery(salon._id);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Add image error:", err);
+      showToast(err.message || "Failed to add image", "error");
     } finally {
       setLoading(false);
     }
@@ -87,15 +96,23 @@ export default function ManageGallery() {
   async function deleteImage(url: string) {
     if (!confirm("Delete this image?")) return;
 
-    const res = await fetch(`/api/salon/gallery/delete`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ salonId: salon._id, imageUrl: url }),
-    });
+    try {
+      const res = await fetch(`/api/salon/gallery/delete`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ salonId: salon._id, imageUrl: url }),
+      });
 
-    const data = await res.json();
-    if (data.success) {
-      loadGallery(salon._id);
+      const data = await res.json();
+      if (data.success) {
+        loadGallery(salon._id);
+        showToast("Image deleted", "success");
+      } else {
+        showToast(data.message || "Failed to delete image", "error");
+      }
+    } catch (err: any) {
+      console.error("Delete image error:", err);
+      showToast("Failed to delete image", "error");
     }
   }
 
@@ -123,10 +140,10 @@ export default function ManageGallery() {
         </h2>
 
         <form onSubmit={addImage} className="space-y-4">
-          <label className="flex items-center gap-3 cursor-pointer bg-slate-50 px-4 py-3 rounded-md border">
+          <label className="flex items-center gap-3 cursor-pointer bg-slate-50 px-4 py-3 rounded-md border disabled:opacity-50 disabled:cursor-not-allowed">
             <ImageIcon className="w-5 h-5 text-slate-500" />
-            <span>Choose Image</span>
-            <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+            <span>{!cloudinaryEnabled ? 'Uploads Disabled' : 'Choose Image'}</span>
+            <input type="file" accept="image/*" onChange={cloudinaryEnabled ? handleImageSelect : undefined} className="hidden" disabled={!cloudinaryEnabled} />
           </label>
 
           {preview && (
