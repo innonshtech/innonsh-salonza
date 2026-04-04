@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import {
     Users,
@@ -12,25 +12,51 @@ import {
     Star,
     MoreVertical,
     History,
-    Tag,
     X,
     Eye,
     Edit2,
     Trash2
 } from "lucide-react";
 
+type Salon = {
+    _id: string;
+};
+
+type Client = {
+    _id: string;
+    name: string;
+    phone: string;
+    email?: string;
+    gender?: "male" | "female" | "other";
+    notes?: string;
+    rating?: number;
+    loyaltyPoints?: number;
+    totalVisits?: number;
+    totalSpent?: number;
+    lastVisit?: string;
+};
+
+type ClientFormData = {
+    name: string;
+    phone: string;
+    email: string;
+    gender: "male" | "female" | "other";
+    notes: string;
+    rating: number;
+};
+
 export default function ClientsPage() {
     const { showToast } = useToast();
-    const [salon, setSalon] = useState<any>(null);
-    const [clients, setClients] = useState<any[]>([]);
+    const [salon, setSalon] = useState<Salon | null>(null);
+    const [clients, setClients] = useState<Client[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
-    const [editingClient, setEditingClient] = useState<any>(null);
-    const [viewingClient, setViewingClient] = useState<any>(null);
-    const [formData, setFormData] = useState({
+    const [editingClient, setEditingClient] = useState<Client | null>(null);
+    const [viewingClient, setViewingClient] = useState<Client | null>(null);
+    const [formData, setFormData] = useState<ClientFormData>({
         name: "",
         phone: "",
         email: "",
@@ -41,16 +67,7 @@ export default function ClientsPage() {
     const [phoneError, setPhoneError] = useState("");
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-    useEffect(() => {
-        const saved = localStorage.getItem("salon");
-        if (saved) {
-            const s = JSON.parse(saved);
-            setSalon(s);
-            fetchClients(s._id);
-        }
-    }, []);
-
-    async function fetchClients(salonId: string) {
+    const fetchClients = useCallback(async (salonId: string) => {
         setLoading(true);
         try {
             const res = await fetch(`/api/clients/list?salonId=${salonId}`);
@@ -67,7 +84,16 @@ export default function ClientsPage() {
         } finally {
             setLoading(false);
         }
-    }
+    }, [showToast]);
+
+    useEffect(() => {
+        const saved = localStorage.getItem("salon");
+        if (saved) {
+            const s: Salon = JSON.parse(saved);
+            setSalon(s);
+            fetchClients(s._id);
+        }
+    }, [fetchClients]);
 
     // Validate phone number (exactly 10 digits)
     function validatePhone(phone: string): boolean {
@@ -78,6 +104,12 @@ export default function ClientsPage() {
     async function handleAddClient(e: React.FormEvent) {
         e.preventDefault();
         setPhoneError("");
+        const salonId = salon?._id;
+
+        if (!salonId) {
+            showToast("Salon context not found", "error");
+            return;
+        }
 
         if (!validatePhone(formData.phone)) {
             setPhoneError("Phone number must be exactly 10 digits (numbers only)");
@@ -90,7 +122,7 @@ export default function ClientsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
-                    salonId: salon._id,
+                    salonId,
                     rating: formData.rating > 0 ? formData.rating : undefined
                 })
             });
@@ -98,7 +130,7 @@ export default function ClientsPage() {
             if (data.success) {
                 setShowAddModal(false);
                 setFormData({ name: "", phone: "", email: "", gender: "male", notes: "", rating: 0 });
-                fetchClients(salon._id);
+                fetchClients(salonId);
                 showToast("Client added successfully!", "success");
             } else {
                 showToast(data.message || "Error adding client", "error");
@@ -112,8 +144,13 @@ export default function ClientsPage() {
     async function handleUpdateClient(e: React.FormEvent) {
         e.preventDefault();
         setPhoneError("");
+        const salonId = salon?._id;
 
         if (!editingClient) return;
+        if (!salonId) {
+            showToast("Salon context not found", "error");
+            return;
+        }
 
         if (!validatePhone(formData.phone)) {
             setPhoneError("Phone number must be exactly 10 digits (numbers only)");
@@ -130,8 +167,8 @@ export default function ClientsPage() {
             if (data.success) {
                 setShowEditModal(false);
                 setEditingClient(null);
-                setFormData({ name: "", phone: "", email: "", gender: "male", notes: "" });
-                fetchClients(salon._id);
+                setFormData({ name: "", phone: "", email: "", gender: "male", notes: "", rating: 0 });
+                fetchClients(salonId);
                 showToast("Client updated successfully!", "success");
             } else {
                 showToast(data.message || "Error updating client", "error");
@@ -144,6 +181,11 @@ export default function ClientsPage() {
 
     async function deleteClient(id: string) {
         if (!confirm("Are you sure you want to delete this client?")) return;
+        const salonId = salon?._id;
+        if (!salonId) {
+            showToast("Salon context not found", "error");
+            return;
+        }
         try {
             const res = await fetch(`/api/clients/delete`, {
                 method: "DELETE",
@@ -152,7 +194,7 @@ export default function ClientsPage() {
             });
             const data = await res.json();
             if (data.success) {
-                fetchClients(salon._id);
+                fetchClients(salonId);
                 showToast("Client deleted successfully!", "success");
             } else {
                 showToast(data.message || "Error deleting client", "error");
@@ -163,7 +205,7 @@ export default function ClientsPage() {
         }
     }
 
-    function openEdit(client: any) {
+    function openEdit(client: Client) {
         setEditingClient(client);
         setFormData({
             name: client.name || "",
@@ -176,7 +218,7 @@ export default function ClientsPage() {
         setShowEditModal(true);
     }
 
-    function openView(client: any) {
+    function openView(client: Client) {
         setViewingClient(client);
         setShowViewModal(true);
     }
@@ -202,7 +244,7 @@ export default function ClientsPage() {
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
-                    className="flex items-center justify-center gap-2 bg-gradient-to-br from-indigo-600 to-blue-700 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-blue-200 hover:scale-105 transition-all active:scale-95"
+                    className="flex items-center justify-center gap-2 bg-linear-to-br from-indigo-600 to-blue-700 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-blue-200 hover:scale-105 transition-all active:scale-95"
                 >
                     <UserPlus className="w-5 h-5" />
                     NEW CLIENT
@@ -234,7 +276,7 @@ export default function ClientsPage() {
                         </div>
 
                         <div className="flex items-start gap-4 mb-6">
-                            <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-400 text-xl font-black uppercase">
+                            <div className="w-16 h-16 bg-linear-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center text-slate-400 text-xl font-black uppercase">
                                 {client.name.charAt(0)}
                             </div>
                             <div>
@@ -246,7 +288,7 @@ export default function ClientsPage() {
                             </div>
                         </div>
 
-                        <div className={`grid gap-4 mb-6 ${client.rating > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                        <div className={`grid gap-4 mb-6 ${(client.rating ?? 0) > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                             <div className="bg-slate-50 p-3 rounded-2xl">
                                 <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Visits</div>
                                 <div className="text-lg font-black text-slate-900">{client.totalVisits}</div>
@@ -255,14 +297,14 @@ export default function ClientsPage() {
                                 <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Spent</div>
                                 <div className="text-lg font-black text-slate-900">₹{client.totalSpent}</div>
                             </div>
-                            {client.rating > 0 && (
+                            {(client.rating ?? 0) > 0 && (
                                 <div className="bg-slate-50 p-3 rounded-2xl">
                                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Rating</div>
                                     <div className="flex items-center gap-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <Star
                                                 key={star}
-                                                className={`w-4 h-4 ${star <= client.rating ? 'text-amber-500 fill-amber-500' : 'text-slate-300'}`}
+                                                className={`w-4 h-4 ${star <= (client.rating ?? 0) ? 'text-amber-500 fill-amber-500' : 'text-slate-300'}`}
                                             />
                                         ))}
                                     </div>
@@ -327,9 +369,9 @@ export default function ClientsPage() {
 
             {/* Add Client Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
-                        <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 p-6 text-white flex justify-between items-center">
+                        <div className="bg-linear-to-br from-indigo-900 to-indigo-800 p-6 text-white flex justify-between items-center">
                             <h3 className="text-xl font-black">Add New Client</h3>
                             <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                 <X className="w-6 h-6" />
@@ -366,7 +408,7 @@ export default function ClientsPage() {
                                     <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Gender</label>
                                     <select
                                         value={formData.gender}
-                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value as ClientFormData["gender"] })}
                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-indigo-500 outline-none font-medium"
                                     >
                                         <option value="male">Male</option>
@@ -422,9 +464,9 @@ export default function ClientsPage() {
 
             {/* Edit Client Modal */}
             {showEditModal && editingClient && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
-                        <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 p-6 text-white flex justify-between items-center">
+                        <div className="bg-linear-to-br from-indigo-900 to-indigo-800 p-6 text-white flex justify-between items-center">
                             <h3 className="text-xl font-black">Edit Client</h3>
                             <button onClick={() => { setShowEditModal(false); setEditingClient(null); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                 <X className="w-6 h-6" />
@@ -461,7 +503,7 @@ export default function ClientsPage() {
                                     <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Gender</label>
                                     <select
                                         value={formData.gender}
-                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value as ClientFormData["gender"] })}
                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-indigo-500 outline-none font-medium"
                                     >
                                         <option value="male">Male</option>
@@ -527,9 +569,9 @@ export default function ClientsPage() {
 
             {/* View Client Modal */}
             {showViewModal && viewingClient && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
-                        <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 p-6 text-white flex justify-between items-center">
+                        <div className="bg-linear-to-br from-indigo-900 to-indigo-800 p-6 text-white flex justify-between items-center">
                             <h3 className="text-xl font-black">Client Details</h3>
                             <button onClick={() => { setShowViewModal(false); setViewingClient(null); }} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
                                 <X className="w-6 h-6" />
