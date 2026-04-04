@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/Toast";
 import {
   Users,
   UserPlus,
@@ -17,10 +18,12 @@ import {
 
 export default function StaffPage() {
   const { token } = useAuth();
+  const { showToast } = useToast();
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -46,6 +49,7 @@ export default function StaffPage() {
       setStaff(data.staff || []);
     } catch (err) {
       console.log("Error loading staff:", err);
+      showToast("Failed to load staff members", "error");
       setError("Failed to load staff members");
     } finally {
       setLoading(false);
@@ -53,8 +57,18 @@ export default function StaffPage() {
   };
 
   useEffect(() => {
-    if (salon?._id) loadStaff();
+    if (salon?._id) {
+      loadStaff();
+    } else {
+      setLoading(false);
+    }
   }, [salon?._id]);
+
+  // Validate phone number (exactly 10 digits)
+  function validatePhone(phone: string): boolean {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  }
 
   // Add Staff
   const handleAddStaff = async () => {
@@ -63,8 +77,14 @@ export default function StaffPage() {
       return;
     }
 
+    if (!validatePhone(newStaff.phone)) {
+      setPhoneError("Phone number must be exactly 10 digits (numbers only)");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
+    setPhoneError("");
 
     try {
       const res = await fetch("/api/staff/add", {
@@ -87,12 +107,13 @@ export default function StaffPage() {
         setShowModal(false);
         setNewStaff({ name: "", phone: "", role: "stylist", skills: "" });
         loadStaff();
+        showToast("Staff added successfully!", "success");
       } else {
-        setError(data.message || "Failed to add staff");
+        showToast(data.message || "Failed to add staff", "error");
       }
     } catch (err) {
       console.log(err);
-      setError("An error occurred while adding staff");
+      showToast("An error occurred while adding staff", "error");
     } finally {
       setSubmitting(false);
     }
@@ -100,34 +121,54 @@ export default function StaffPage() {
 
   // Update Status
   const updateStatus = async (staffId: string, status: string) => {
-    const res = await fetch("/api/staff/status", {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ staffId, status }),
-    });
+    try {
+      const res = await fetch("/api/staff/status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ staffId, status }),
+      });
 
-    const data = await res.json();
-    if (data.success) loadStaff();
+      const data = await res.json();
+      if (data.success) {
+        loadStaff();
+        showToast("Staff status updated!", "success");
+      } else {
+        showToast(data.message || "Failed to update status", "error");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+      showToast("Failed to update staff status", "error");
+    }
   };
 
-  // Disable Staff
-  const disableStaff = async (staffId: string) => {
-    if (!confirm("Are you sure you want to disable this staff member?")) return;
+  // Delete Staff
+  const deleteStaff = async (staffId: string) => {
+    if (!confirm("Are you sure you want to delete this staff member? This action cannot be undone.")) return;
 
-    const res = await fetch("/api/staff/delete", {
-      method: "DELETE",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ staffId }),
-    });
+    try {
+      const res = await fetch("/api/staff/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ staffId }),
+      });
 
-    const data = await res.json();
-    if (data.success) loadStaff();
+      const data = await res.json();
+      if (data.success) {
+        loadStaff();
+        showToast("Staff member deleted successfully!", "success");
+      } else {
+        showToast(data.message || "Failed to delete staff", "error");
+      }
+    } catch (error) {
+      console.error("Error deleting staff:", error);
+      showToast("Failed to delete staff", "error");
+    }
   };
 
   // Get status color
@@ -329,11 +370,11 @@ export default function StaffPage() {
 
                   {/* Actions */}
                   <button
-                    onClick={() => disableStaff(member._id)}
+                    onClick={() => deleteStaff(member._id)}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors border border-red-100"
                   >
                     <UserX className="w-4 h-4" />
-                    Disable Staff Member
+                    Delete Staff Member
                   </button>
                 </div>
               ))}
@@ -391,20 +432,23 @@ export default function StaffPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Phone Number
+                  Phone Number *
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="tel"
-                    placeholder="Enter phone number"
+                    placeholder="10 digit phone number"
                     value={newStaff.phone}
-                    className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C4EFF] focus:border-transparent"
+                    className={`w-full pl-11 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C4EFF] focus:border-transparent ${phoneError ? 'border-red-500' : 'border-slate-300'}`}
                     onChange={(e) =>
                       setNewStaff({ ...newStaff, phone: e.target.value })
                     }
                   />
                 </div>
+                {phoneError && (
+                  <p className="text-red-500 text-xs mt-1">{phoneError}</p>
+                )}
               </div>
 
               <div>

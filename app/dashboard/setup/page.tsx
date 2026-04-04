@@ -1,11 +1,11 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
-import { 
-  Store, 
-  MapPin, 
-  Phone, 
+import { useState, useEffect } from "react";
+import {
+  Store,
+  MapPin,
+  Phone,
   Mail,
   User,
   ArrowRight,
@@ -13,9 +13,11 @@ import {
   Sparkles,
   CheckCircle2
 } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
 
 export default function SalonSetupPage() {
   const { user } = useAuth();
+  const { showToast } = useToast();
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
@@ -23,11 +25,49 @@ export default function SalonSetupPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    // Check if user already has a salon, redirect if yes
+    async function checkExistingSalon() {
+      try {
+        const saved = localStorage.getItem("salon");
+        if (saved) {
+          window.location.href = "/dashboard";
+          return;
+        }
+
+        // Also check via API
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (data.success && data.salon) {
+          localStorage.setItem("salon", JSON.stringify(data.salon));
+          window.location.href = "/dashboard";
+        }
+      } catch (err) {
+        console.error("Error checking salon:", err);
+      } finally {
+        setChecking(false);
+      }
+    }
+
+    if (user) {
+      checkExistingSalon();
+    }
+  }, [user]);
 
   async function handleCreateSalon(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    // Validate phone number
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      setLoading(false);
+      showToast("Please enter a valid phone number (10-15 digits)", "error");
+      return;
+    }
 
     try {
       const res = await fetch("/api/salon/create", {
@@ -57,6 +97,17 @@ export default function SalonSetupPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Checking salon status...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

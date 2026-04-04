@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/Toast";
 import {
   Scissors,
   Plus,
@@ -13,6 +14,7 @@ import {
   Save,
   Image as ImageIcon,
 } from "lucide-react";
+import { uploadImage, CLOUDINARY_ENABLED } from "@/lib/cloudinary";
 
 interface Service {
   _id: string;
@@ -25,6 +27,7 @@ interface Service {
 
 export default function ManageServices() {
   const { token } = useAuth();
+  const { showToast } = useToast();
   const [salon, setSalon] = useState<any>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,8 +50,7 @@ export default function ManageServices() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const cloudinaryEnabled = CLOUDINARY_ENABLED;
 
   const mountedRef = useRef(false);
 
@@ -77,9 +79,11 @@ export default function ManageServices() {
         setServices(data.services);
       } else {
         setServices([]);
+        if (data?.message) showToast(data.message, "error");
       }
     } catch (err) {
       console.error("loadServices:", err);
+      showToast("Failed to load services", "error");
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -107,37 +111,26 @@ export default function ManageServices() {
     }
   }
 
-  async function uploadToCloudinary(file: File) {
-    if (!cloudName || !uploadPreset) {
-      throw new Error("Cloudinary not configured (check NEXT_PUBLIC_ env vars)");
+  async function uploadToCloudinary(file: File): Promise<string> {
+    const result = await uploadImage(file);
+
+    if (result.error) {
+      throw new Error(result.error);
     }
 
-    const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("upload_preset", uploadPreset);
-
-    const res = await fetch(url, {
-      method: "POST",
-      body: fd,
-    });
-    console.log("Cloudinary response:", res);
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error("Cloudinary upload failed: " + errText);
-    }
-
-    const data = await res.json();
-    
-    return data.secure_url as string;
+    return result.url;
   }
 
   async function addService(e: React.FormEvent) {
     e.preventDefault();
-    if (!salon) return alert("Salon not found in localStorage");
+    if (!salon) {
+      showToast("Salon not found", "error");
+      return;
+    }
 
     if (!name || !duration || !price) {
-      return alert("Please fill name, duration and price");
+      showToast("Please fill name, duration and price", "error");
+      return;
     }
 
     setLoading(true);
@@ -158,7 +151,7 @@ export default function ManageServices() {
 
       const res = await fetch("/api/salon/services", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
@@ -176,13 +169,14 @@ export default function ManageServices() {
         setDescription("");
         setImageFile(null);
         setImagePreview(null);
+        showToast("Service added successfully!", "success");
       } else {
         console.error("Add service failed:", data);
-        alert(data?.message || "Failed to add service");
+        showToast(data?.message || "Failed to add service", "error");
       }
     } catch (err: any) {
       console.error("addService error:", err);
-      alert(err?.message || "Upload failed");
+      showToast(err?.message || "Upload failed", "error");
     } finally {
       setLoading(false);
     }
@@ -211,7 +205,8 @@ export default function ManageServices() {
   async function saveEdit(id: string) {
     if (!editingId) return;
     if (!editName || !editDuration || !editPrice) {
-      return alert("Please fill name, duration and price");
+      showToast("Please fill name, duration and price", "error");
+      return;
     }
 
     setBusyId(id);
@@ -239,7 +234,7 @@ export default function ManageServices() {
 
       const res = await fetch("/api/salon/services", {
         method: "PUT",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
@@ -250,13 +245,14 @@ export default function ManageServices() {
       if (res.ok && data.success) {
         await loadServices(salon._id);
         cancelEdit();
+        showToast("Service updated successfully!", "success");
       } else {
         console.error("Update failed:", data);
-        alert(data?.message || "Failed to update service");
+        showToast(data?.message || "Failed to update service", "error");
       }
     } catch (err: any) {
       console.error("saveEdit error:", err);
-      alert(err?.message || "Update failed");
+      showToast(err?.message || "Update failed", "error");
     } finally {
       setBusyId(null);
     }
@@ -268,7 +264,7 @@ export default function ManageServices() {
     try {
       const res = await fetch("/api/salon/services", {
         method: "DELETE",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
@@ -278,13 +274,14 @@ export default function ManageServices() {
       const data = await res.json();
       if (res.ok && data.success) {
         await loadServices(salon._id);
+        showToast("Service deleted successfully!", "success");
       } else {
         console.error("Delete failed:", data);
-        alert(data?.message || "Failed to delete");
+        showToast(data?.message || "Failed to delete service", "error");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("deleteService error:", err);
-      alert("Delete failed");
+      showToast("Delete failed", "error");
     } finally {
       setBusyId(null);
     }
@@ -391,10 +388,10 @@ export default function ManageServices() {
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Image (optional)</label>
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-100">
+              <label className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-md cursor-pointer hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
                 <ImageIcon className="w-4 h-4 text-slate-600" />
-                <span className="text-sm text-slate-700">Choose Image</span>
-                <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                <span className="text-sm text-slate-700">{!cloudinaryEnabled ? 'Uploads Disabled' : 'Choose Image'}</span>
+                <input type="file" accept="image/*" onChange={cloudinaryEnabled ? handleImageSelect : undefined} className="hidden" disabled={!cloudinaryEnabled} />
               </label>
 
               {imagePreview ? (
@@ -486,10 +483,10 @@ export default function ManageServices() {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 px-3 py-2 bg-white border rounded-md cursor-pointer">
+                        <label className="flex items-center gap-2 px-3 py-2 bg-white border rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                           <ImageIcon className="w-4 h-4" />
-                          <input type="file" accept="image/*" onChange={handleEditImageSelect} className="hidden" />
-                          <span className="text-xs">Replace Image</span>
+                          <input type="file" accept="image/*" onChange={cloudinaryEnabled ? handleEditImageSelect : undefined} className="hidden" disabled={!cloudinaryEnabled} />
+                          <span className="text-xs">{!cloudinaryEnabled ? 'Uploads Disabled' : 'Replace Image'}</span>
                         </label>
 
                         {editImagePreview ? (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useToast } from "@/components/ui/Toast";
 import {
     Tag,
     Plus,
@@ -25,6 +26,7 @@ interface Offer {
 }
 
 export default function ManageOffers() {
+    const { showToast } = useToast();
     const [salon, setSalon] = useState<any>(null);
     const [offers, setOffers] = useState<Offer[]>([]);
     const [loading, setLoading] = useState(false);
@@ -93,9 +95,13 @@ export default function ManageOffers() {
                     percentage: "",
                 });
                 loadOffers(salon._id);
+                showToast("Offer created successfully!", "success");
+            } else {
+                showToast(data.message || "Failed to create offer", "error");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Add offer error:", err);
+            showToast(err.message || "Failed to create offer", "error");
         } finally {
             setLoading(false);
         }
@@ -113,9 +119,13 @@ export default function ManageOffers() {
             const data = await res.json();
             if (data.success) {
                 loadOffers(salon._id);
+                showToast("Offer deleted successfully!", "success");
+            } else {
+                showToast(data.message || "Failed to delete offer", "error");
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error("Delete offer error:", err);
+            showToast(err.message || "Failed to delete offer", "error");
         }
     }
 
