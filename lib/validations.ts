@@ -32,8 +32,8 @@ export const bookingCreateSchema = z.object({
 
 export const serviceCreateSchema = z.object({
   name: z.string().min(1, "Service name is required"),
-  duration: z.number().positive("Duration must be positive"),
-  price: z.number().nonnegative("Price cannot be negative"),
+  duration: z.coerce.number().positive("Duration must be positive"),
+  price: z.coerce.number().nonnegative("Price cannot be negative"),
   description: z.string().optional(),
   image: z.string().nullable().optional()
 });

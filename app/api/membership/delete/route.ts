@@ -21,7 +21,7 @@ async function handler(req: Request, decoded: any) {
     }
 
     // Find and verify ownership
-    const membership = await Membership.findOne({ _id: planId });
+    const membership = await Membership.findById(planId);
     if (!membership) {
       return NextResponse.json({ success: false, message: "Membership plan not found" }, { status: 404 });
     }

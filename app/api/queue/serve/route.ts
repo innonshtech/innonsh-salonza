@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Queue from "@/models/Queue";
+import Booking from "@/models/Booking";
+import Staff from "@/models/Staff";
 import fs from "fs";
 import path from "path";
 
@@ -19,6 +21,21 @@ export async function POST(req: Request) {
         const { id, staffId } = await req.json();
         logToFile(`API START: Move to serve requested for ID: ${id}, Staff: ${staffId}`);
 
+        // VALIDATION: Check if staff is available
+        if (staffId) {
+            const staff = await Staff.findById(staffId);
+            if (!staff) {
+                return NextResponse.json({ success: false, message: "Staff not found" }, { status: 404 });
+            }
+            if (staff.status === "break" || staff.status === "offline") {
+                return NextResponse.json({ success: false, message: `Staff is currently on ${staff.status}` }, { status: 400 });
+            }
+            // Auto update staff status to busy
+            staff.status = "busy";
+            await staff.save();
+            logToFile(`STAFF UPDATE: Staff ${staffId} set to busy`);
+        }
+
         const updateData: any = {
             status: "serving",
             position: 0
@@ -36,6 +53,30 @@ export async function POST(req: Request) {
         }
 
         logToFile(`API UPDATE: ID ${id} status set to ${item.status}`);
+
+        // IMPORTANT: If this queue item is linked to a booking, update the booking status to "in-progress"
+        if (item.bookingId) {
+            try {
+                const bookingUpdate = await Booking.findByIdAndUpdate(
+                    item.bookingId,
+                    {
+                        $set: {
+                            status: "in-progress",
+                            startedAt: new Date()
+                        }
+                    },
+                    { new: true }
+                );
+                if (bookingUpdate) {
+                    logToFile(`API BOOKING UPDATE: Linked booking ${item.bookingId} marked as in-progress`);
+                } else {
+                    logToFile(`API WARNING: Linked booking ${item.bookingId} not found`);
+                }
+            } catch (err) {
+                logToFile(`API ERROR updating booking: ${err.message}`);
+                // Continue even if booking update fails - we still want to serve the customer
+            }
+        }
 
         // Re-index remaining waiting items
         const waitingItems = await Queue.find({

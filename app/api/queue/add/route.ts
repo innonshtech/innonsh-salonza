@@ -9,7 +9,9 @@ import { sendSMS, sendEmail } from "@/lib/notifications";
 async function handler(req: Request, decoded: any) {
   try {
     await dbConnect();
-    const { customerName, serviceIds, customerPhone } = await req.json();
+    const { customerName, serviceIds, customerPhone, scheduledAt } = await req.json();
+
+    const finalScheduledAt = scheduledAt ? new Date(scheduledAt) : new Date();
 
     // Force salonId from JWT to prevent IDOR
     const salonId = decoded.salonId;
@@ -22,20 +24,27 @@ async function handler(req: Request, decoded: any) {
     const count = await Queue.countDocuments({ salonId, status: { $ne: "serving" } });
     const position = count + 1;
 
+    const [salon, services] = await Promise.all([
+      Salon.findById(salonId),
+      Service.find({ _id: { $in: finalServiceIds } }),
+    ]);
+
+    const totalDuration = services.reduce((sum, s) => sum + Number(s.duration || 0), 0);
+    console.log("Walk-in Queue - Fetched Services:", services.map(s => ({ name: s.name, duration: s.duration })));
+    console.log("Total Calculated Duration:", totalDuration);
+
     const item = await Queue.create({
       salonId,
       customerName,
       customerPhone,
       serviceIds: finalServiceIds,
       serviceId: finalServiceIds[0] || null, 
+      services: services.map(s => ({ name: s.name, duration: s.duration })),
       position,
+      scheduledAt: finalScheduledAt,
+      isWalkIn: true,
+      estimatedMinutes: totalDuration,
     });
-
-    // Fetch details for notifications
-    const [salon, services] = await Promise.all([
-      Salon.findById(salonId),
-      Service.find({ _id: { $in: finalServiceIds } }),
-    ]);
 
     const serviceNames = services.map(s => s.name).join(", ");
 

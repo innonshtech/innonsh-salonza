@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/apiAuth";
 import dbConnect from "@/lib/dbConnect";
 import Queue from "@/models/Queue";
+import Booking from "@/models/Booking";
 import Sale from "@/models/Sale";
 import Service from "@/models/Service";
 import { sendSMS } from "@/lib/notifications";
@@ -24,77 +25,121 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "Ownership mismatch" }, { status: 403 });
     }
 
+    console.log("Completing queue payment for item:", { id, customerName: item.customerName, wasServing: item.status === "serving", bookingId: item.bookingId });
+
     const wasServing = item.status === "serving";
 
-    // 2. If it was serving, record a consolidated sale for the session
+    // 2. If it was serving, process payment (either update linked Booking or create Sale)
     if (wasServing) {
-      try {
-        const finalServiceIds = item.serviceIds && item.serviceIds.length > 0
-          ? item.serviceIds
-          : (item.serviceId ? [item.serviceId] : []);
+      const finalServiceIds = item.serviceIds && item.serviceIds.length > 0
+        ? item.serviceIds
+        : (item.serviceId ? [item.serviceId] : []);
 
-        if (finalServiceIds.length > 0) {
-          const services = await Service.find({ _id: { $in: finalServiceIds } });
-          const servicesData = services.map(s => ({
-            serviceId: s._id,
-            name: s.name,
-            price: s.price
-          }));
+      if (finalServiceIds.length === 0) {
+        return NextResponse.json({ success: false, message: "No services associated with this queue item" }, { status: 400 });
+      }
 
-          const totalAmount = servicesData.reduce((sum, s) => sum + s.price, 0);
-          const discountAmount = discount?.amount || 0;
-          const finalAmount = totalAmount - discountAmount;
+      const services = await Service.find({ _id: { $in: finalServiceIds } });
+      const servicesData = services.map(s => ({
+        serviceId: s._id,
+        name: s.name,
+        price: s.price
+      }));
 
-          const sale = await Sale.create({
-            salonId: item.salonId,
-            staffId: item.staffId,
-            customerName: item.customerName,
-            customerPhone: item.customerPhone,
-            services: servicesData,
-            totalAmount,
-            discount: {
-              type: discount?.type || "none",
-              value: discount?.value || 0,
-              amount: discountAmount
-            },
-            finalAmount,
-            paymentMethod: paymentMethod || "cash",
-            paymentSplit: {
-              cash: paymentSplit?.cash || (paymentMethod === "cash" ? finalAmount : 0),
-              online: paymentSplit?.online || (paymentMethod === "online" ? finalAmount : 0)
-            },
-            date: new Date()
-          });
+      const totalAmount = servicesData.reduce((sum, s) => sum + s.price, 0);
+      const discountAmount = discount?.amount || 0;
+      const finalAmount = totalAmount - discountAmount;
 
-          // 3. CRM Integration
-          if (item.customerPhone) {
-            const Client = (await import("@/models/Client")).default;
-            const pointsEarned = Math.floor(finalAmount / 100);
+      console.log("Payment calculation:", { totalAmount, discountAmount, finalAmount, paymentMethod, paymentSplit });
 
-            await Client.findOneAndUpdate(
-              { salonId: item.salonId, phone: item.customerPhone },
-              {
-                $set: {
-                  name: item.customerName,
-                  lastVisit: new Date()
-                },
-                $inc: {
-                  totalVisits: 1,
-                  totalSpent: finalAmount,
-                  loyaltyPoints: pointsEarned
-                }
-              },
-              { upsert: true, new: true }
-            );
+      // 2.a Update linked booking (if exists)
+      if (item.bookingId) {
+        try {
+          const booking = await Booking.findById(item.bookingId);
+          if (booking) {
+            booking.status = "completed";
+            booking.paymentStatus = "paid";
+            booking.paidAmount = finalAmount;
+            booking.completedAt = new Date();
+            await booking.save();
+            console.log(`Booking ${booking._id} marked as completed & paid via queue completion`);
           }
+        } catch (err) {
+          console.error("Error updating linked booking:", err);
         }
+      }
+
+      // 2.b Create Sale (Single Source of Truth for Revenue Analytics)
+      try {
+        const sale = await Sale.create({
+          salonId: item.salonId,
+          staffId: item.staffId,
+          customerName: item.customerName,
+          customerPhone: item.customerPhone,
+          services: servicesData,
+          totalAmount,
+          discount: {
+            type: discount?.type || "none",
+            value: discount?.value || 0,
+            amount: discountAmount
+          },
+          finalAmount,
+          paymentMethod: paymentMethod || "cash",
+          paymentSplit: {
+            cash: paymentSplit?.cash || (paymentMethod === "cash" ? finalAmount : 0),
+            online: paymentSplit?.online || (paymentMethod === "online" ? finalAmount : 0)
+          },
+          date: new Date(),
+          bookingId: item.bookingId // Link to booking if applicable
+        });
+        console.log(`Sale created for queue item ${item._id}: ${sale._id}`);
       } catch (err) {
-        console.error("Error creating sale/CRM record:", err);
+        console.error("Error creating sale:", err);
+        return NextResponse.json({ success: false, message: "Failed to record sale" }, { status: 500 });
+      }
+
+      // CRM Integration (for both booking and walk-in)
+      if (item.customerPhone) {
+        try {
+          const Client = (await import("@/models/Client")).default;
+          const pointsEarned = Math.floor(finalAmount / 100);
+
+          await Client.findOneAndUpdate(
+            { salonId: item.salonId, phone: item.customerPhone },
+            {
+              $set: {
+                name: item.customerName,
+                lastVisit: new Date()
+              },
+              $inc: {
+                totalVisits: 1,
+                totalSpent: finalAmount,
+                loyaltyPoints: pointsEarned
+              }
+            },
+            { upsert: true, new: true }
+          );
+          console.log("CRM updated for customer:", item.customerPhone);
+        } catch (err) {
+          console.error("Error updating CRM:", err);
+          // CRM failure shouldn't block payment completion
+        }
       }
     }
 
     // 3. Remove the item
     await Queue.findByIdAndDelete(id);
+
+    // 3.a AUTO STATUS SYNC: Set staff back to available
+    if (wasServing && item.staffId) {
+      try {
+        const Staff = (await import("@/models/Staff")).default;
+        await Staff.findByIdAndUpdate(item.staffId, { status: "available" });
+        console.log(`Staff ${item.staffId} set back to available after completing ${item.customerName}`);
+      } catch (err) {
+        console.error("Error resetting staff status:", err);
+      }
+    }
 
     // 4. Re-index waiting positions
     const items = await Queue.find({
@@ -130,4 +175,3 @@ async function handler(req: Request, decoded: any) {
 }
 
 export const POST = withAuth(handler);
-

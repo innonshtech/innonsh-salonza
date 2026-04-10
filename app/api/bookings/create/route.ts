@@ -18,7 +18,7 @@ async function handler(req: Request) {
     const service = await Service.findById(serviceId);
     if (!service) return NextResponse.json({ success: false, message: "Service not found" });
 
-    // create booking
+    // create booking with total price and duration
     const booking = await Booking.create({
       salonId: salon._id,
       serviceId,
@@ -26,6 +26,8 @@ async function handler(req: Request) {
       customerPhone,
       date: date ? new Date(date) : new Date(),
       status: "upcoming",
+      totalPrice: service.price,
+      totalDuration: service.duration,
     });
 
     // Notify customer via SMS (if phone provided)

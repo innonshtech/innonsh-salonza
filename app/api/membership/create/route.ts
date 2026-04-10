@@ -11,23 +11,24 @@ async function handler(req: Request, decoded: any) {
 
     const { name, price, validity, discount, benefits, isActive } = body;
 
-    // Attach salonId from JWT (decoded) - NOT from body
+    // Attach salonId from JWT (decoded)
     const salonId = decoded.salonId;
     if (!salonId) {
       return NextResponse.json({ success: false, message: "User is not associated with any salon" }, { status: 403 });
     }
 
-    if (!name || price === undefined || validity === undefined || discount === undefined || benefits === undefined) {
-      return NextResponse.json({ success: false, message: "All fields (name, price, validity, discount, benefits) are required" }, { status: 400 });
+    // Validation
+    if (!name || name.trim().length === 0) {
+      return NextResponse.json({ success: false, message: "Plan name is required" }, { status: 400 });
     }
 
     const membership = await Membership.create({
       salonId,
-      name,
-      price: Number(price),
-      validity: Number(validity),
-      discount: Number(discount),
-      benefits: String(benefits),
+      name: name.trim(),
+      price: Number(price) || 0,
+      validity: Number(validity) || 365,
+      discount: Number(discount) || 0,
+      benefits: String(benefits || ""),
       isActive: isActive !== undefined ? isActive : true
     });
 

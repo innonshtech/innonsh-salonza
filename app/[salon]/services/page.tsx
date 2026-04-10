@@ -11,7 +11,7 @@ export default async function ServicesPage({ params }: any) {
   const salon = await Salon.findOne({ slug });
   if (!salon) return <div>Salon not found</div>;
 
-  const services = await Service.find({ salonId: salon._id });
+  const services = await Service.find({ salonId: salon._id, isActive: { $ne: false } });
 
   return (
     <div style={{ padding: 30 }}>

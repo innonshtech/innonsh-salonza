@@ -10,6 +10,7 @@ const ServiceSchema = new mongoose.Schema({
   description: { type: String, default: "" },
   category: { type: String, default: "General" },
   image: { type: String, default: "" }, // Cloudinary URL
+  isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });
 delete mongoose.models.Service;

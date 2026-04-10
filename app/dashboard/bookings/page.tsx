@@ -27,7 +27,7 @@ interface Booking {
   time?: string;
   serviceId: string;
   serviceName?: string;
-  status?: 'confirmed' | 'pending' | 'cancelled' | 'completed';
+  status?: 'upcoming' | 'in-progress' | 'completed' | 'cancelled';
   notes?: string;
 }
 
@@ -109,14 +109,14 @@ export default function BookingsPage() {
 
   function getStatusColor(status?: string) {
     switch (status) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-700 border-green-200';
-      case 'pending':
+      case 'upcoming':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'in-progress':
         return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+      case 'completed':
+        return 'bg-green-100 text-green-700 border-green-200';
       case 'cancelled':
         return 'bg-red-100 text-red-700 border-red-200';
-      case 'completed':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
       default:
         return 'bg-slate-100 text-slate-700 border-slate-200';
     }
@@ -124,16 +124,16 @@ export default function BookingsPage() {
 
   function getStatusIcon(status?: string) {
     switch (status) {
-      case 'confirmed':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'pending':
-        return <AlertCircle className="w-4 h-4" />;
-      case 'cancelled':
-        return <XCircle className="w-4 h-4" />;
+      case 'upcoming':
+        return <Clock className="w-4 h-4" />;
+      case 'in-progress':
+        return <Timer className="w-4 h-4" />;
       case 'completed':
         return <CheckCircle className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
       default:
-        return <Clock className="w-4 h-4" />;
+        return <AlertCircle className="w-4 h-4" />;
     }
   }
 
@@ -276,8 +276,8 @@ export default function BookingsPage() {
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none bg-white"
             >
               <option value="all">All Status</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="pending">Pending</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="in-progress">In Progress</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
             </select>

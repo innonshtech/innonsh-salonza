@@ -8,6 +8,11 @@ async function handler(req: Request, decoded: any) {
     await dbConnect();
     const { staffId, status } = await req.json();
 
+    const allowedStatuses = ["available", "busy", "break", "offline"];
+    if (!allowedStatuses.includes(status)) {
+        return NextResponse.json({ success: false, message: "Invalid status value" }, { status: 400 });
+    }
+
     // IDOR Protection: Verify ownership
     const staffMember = await Staff.findById(staffId);
     if (!staffMember || staffMember.salonId.toString() !== decoded.salonId.toString()) {
@@ -16,7 +21,7 @@ async function handler(req: Request, decoded: any) {
 
     const updatedStaff = await Staff.findByIdAndUpdate(
       staffId,
-      { currentStatus: status },
+      { status: status, currentStatus: status },
       { new: true }
     );
 
@@ -27,3 +32,4 @@ async function handler(req: Request, decoded: any) {
 }
 
 export const POST = withAuth(handler, ["salon_owner", "super_admin"]);
+export const PUT = withAuth(handler, ["salon_owner", "super_admin"]);

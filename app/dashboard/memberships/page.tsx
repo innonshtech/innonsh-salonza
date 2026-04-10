@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/Toast";
 import {
@@ -46,15 +46,17 @@ export default function MembershipsPage() {
         isActive: true
     });
 
-    useEffect(() => {
-        if (token) {
-            fetchPlans();
-        }
-    }, [token]);
+    const mountedRef = useRef(false);
 
     useEffect(() => {
-        console.log("Plans:", plans);
-    }, [plans]);
+        mountedRef.current = true;
+        fetchPlans();
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
+
+
 
     async function fetchPlans() {
         setLoading(true);
@@ -75,7 +77,7 @@ export default function MembershipsPage() {
             console.error("Fetch Error:", error);
             showToast("Failed to fetch membership plans", "error");
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     }
 
@@ -257,7 +259,7 @@ export default function MembershipsPage() {
                     {plans.map((plan) => (
                         <div
                             key={plan._id}
-                            className={`group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-purple-200 transition-all overflow-hidden flex flex-col ${!plan.isActive && 'opacity-75 grayscale-[0.5]'}`}
+                            className={`group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-purple-200 transition-all overflow-hidden flex flex-col ${!plan.isActive ? 'opacity-75 grayscale-[0.5]' : ''}`}
                         >
                             <div className="p-6 flex-1">
                                 <div className="flex justify-between items-start mb-4">
@@ -297,14 +299,18 @@ export default function MembershipsPage() {
                                     <div className="space-y-2">
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Benefits</p>
                                         <div className="flex flex-wrap gap-2">
-                                            {plan.benefits.split(',').map((benefit, idx) => (
-                                                benefit.trim() && (
-                                                    <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-sm text-slate-600">
-                                                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                                                        {benefit.trim()}
-                                                    </div>
-                                                )
-                                            ))}
+                                            {plan.benefits && typeof plan.benefits === 'string' ? (
+                                                plan.benefits.split(',').map((benefit, idx) => (
+                                                    benefit.trim() && (
+                                                        <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-sm text-slate-600">
+                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                                                            {benefit.trim()}
+                                                        </div>
+                                                    )
+                                                ))
+                                            ) : (
+                                                <p className="text-xs text-slate-400 italic">No specific benefits listed</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

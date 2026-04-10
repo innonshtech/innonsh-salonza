@@ -30,7 +30,6 @@ export default function StaffPage() {
   const [newStaff, setNewStaff] = useState({
     name: "",
     phone: "",
-    role: "stylist",
     skills: "",
   });
 
@@ -97,7 +96,6 @@ export default function StaffPage() {
           salonId: salon._id,
           name: newStaff.name,
           phone: newStaff.phone,
-          role: newStaff.role,
           skills: newStaff.skills.split(",").map((s) => s.trim()),
         }),
       });
@@ -105,7 +103,7 @@ export default function StaffPage() {
       const data = await res.json();
       if (data.success) {
         setShowModal(false);
-        setNewStaff({ name: "", phone: "", role: "stylist", skills: "" });
+        setNewStaff({ name: "", phone: "", skills: "" });
         loadStaff();
         showToast("Staff added successfully!", "success");
       } else {
@@ -123,7 +121,7 @@ export default function StaffPage() {
   const updateStatus = async (staffId: string, status: string) => {
     try {
       const res = await fetch("/api/staff/status", {
-        method: "POST",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
@@ -133,7 +131,9 @@ export default function StaffPage() {
 
       const data = await res.json();
       if (data.success) {
-        loadStaff();
+        setStaff((prev: any) => 
+          prev.map((s: any) => s._id === staffId ? { ...s, status } : s)
+        );
         showToast("Staff status updated!", "success");
       } else {
         showToast(data.message || "Failed to update status", "error");
@@ -177,11 +177,11 @@ export default function StaffPage() {
       case "available":
         return "bg-green-100 text-green-700 border-green-200";
       case "busy":
-        return "bg-amber-100 text-amber-700 border-amber-200";
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "break":
-        return "bg-blue-100 text-blue-700 border-blue-200";
+        return "bg-orange-100 text-orange-700 border-orange-200";
       case "offline":
-        return "bg-slate-100 text-slate-700 border-slate-200";
+        return "bg-red-100 text-red-700 border-red-200";
       default:
         return "bg-slate-100 text-slate-700 border-slate-200";
     }
@@ -205,7 +205,7 @@ export default function StaffPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Staff Management</h1>
           <p className="text-slate-600 mt-1">
-            Manage your team members and their availability
+            Manage your team members and their real-time availability
           </p>
         </div>
 
@@ -223,55 +223,55 @@ export default function StaffPage() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-purple-50 rounded-lg">
               <Users className="w-5 h-5 text-[#6C4EFF]" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Total Staff</p>
+              <p className="text-sm text-slate-600 font-medium">Total Staff</p>
               <p className="text-2xl font-bold text-slate-900">{staff.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-green-50 rounded-lg">
               <CircleDot className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Available</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {staff.filter((s: any) => s.currentStatus === "available").length}
+              <p className="text-sm text-slate-600 font-medium">Available</p>
+              <p className="text-2xl font-bold text-green-600">
+                {staff.filter((s: any) => s.status === "available").length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-50 rounded-lg">
-              <CircleDot className="w-5 h-5 text-amber-600" />
+            <div className="p-2 bg-yellow-50 rounded-lg">
+              <CircleDot className="w-5 h-5 text-yellow-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Busy</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {staff.filter((s: any) => s.currentStatus === "busy").length}
+              <p className="text-sm text-slate-600 font-medium">Busy</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {staff.filter((s: any) => s.status === "busy").length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-slate-50 rounded-lg">
-              <CircleDot className="w-5 h-5 text-slate-600" />
+            <div className="p-2 bg-orange-50 rounded-lg">
+              <CircleDot className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-sm text-slate-600">Offline</p>
-              <p className="text-2xl font-bold text-slate-900">
-                {staff.filter((s: any) => s.currentStatus === "offline").length}
+              <p className="text-sm text-slate-600 font-medium">On Break</p>
+              <p className="text-2xl font-bold text-orange-600">
+                {staff.filter((s: any) => s.status === "break").length}
               </p>
             </div>
           </div>
@@ -279,103 +279,116 @@ export default function StaffPage() {
       </div>
 
       {/* Staff List */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-xl font-semibold text-slate-900">Staff Members</h2>
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-slate-200 bg-slate-50/50">
+          <h2 className="text-lg font-bold text-slate-900">Active Professionals</h2>
         </div>
 
         <div className="p-6">
           {staff.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600 font-medium mb-1">No staff members yet</p>
+            <div className="text-center py-16">
+              <Users className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-600 font-bold mb-1">No staff members yet</p>
               <p className="text-slate-500 text-sm">
                 Get started by adding your first team member
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               {staff.map((member: any) => (
                 <div
                   key={member._id}
-                  className="border border-slate-200 rounded-lg p-5 hover:border-slate-300 transition-colors"
+                  className="bg-white border-2 border-slate-100 rounded-2xl p-6 hover:border-purple-200 transition-all hover:shadow-md group"
                 >
                   {/* Staff Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-50 rounded-full flex items-center justify-center">
-                        <span className="text-lg font-bold text-[#6C4EFF]">
-                          {member.name.charAt(0).toUpperCase()}
-                        </span>
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg text-white font-black text-xl">
+                        {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">
+                        <h3 className="text-xl font-black text-slate-900 leading-tight">
                           {member.name}
                         </h3>
-                        <div className="flex items-center gap-2 text-sm text-slate-600 mt-0.5">
+                        <p className="text-xs font-black text-purple-600 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
                           <Briefcase className="w-3.5 h-3.5" />
-                          <span className="capitalize">{member.role}</span>
-                        </div>
+                          Professional
+                        </p>
                       </div>
                     </div>
 
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                        member.currentStatus
+                    <div
+                      className={`px-3.5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 ${getStatusColor(
+                        member.status
                       )}`}
                     >
-                      {member.currentStatus}
-                    </span>
+                      {member.status}
+                    </div>
                   </div>
 
                   {/* Staff Details */}
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Phone className="w-4 h-4 text-slate-400" />
-                      <span>{member.phone || "No phone number"}</span>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Contact</p>
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{member.phone || "N/A"}</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-start gap-2 text-sm text-slate-600">
-                      <Award className="w-4 h-4 text-slate-400 mt-0.5" />
-                      <span>
-                        {member.skills?.length > 0
-                          ? member.skills.join(", ")
-                          : "No skills listed"}
-                      </span>
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Expertise</p>
+                      <div className="flex items-center gap-2 text-sm font-bold text-slate-700 truncate">
+                        <Award className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="truncate">
+                          {member.skills?.length > 0 ? member.skills[0] : "Generalist"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Status Control */}
-                  <div className="mb-4">
-                    <p className="text-xs font-medium text-slate-700 mb-2 uppercase tracking-wide">
-                      Update Status
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 transition-all group-hover:bg-white group-hover:border-purple-100">
+                    <p className="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest flex items-center gap-2">
+                        <CircleDot className="w-3 h-3" />
+                        Manage Availability
                     </p>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      {["available", "busy", "break", "offline"].map((status) => (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: "available", color: "hover:bg-green-500 hover:text-white" },
+                        { id: "busy", color: "hover:bg-yellow-500 hover:text-white" },
+                        { id: "break", color: "hover:bg-orange-500 hover:text-white" },
+                        { id: "offline", color: "hover:bg-red-500 hover:text-white" }
+                      ].map((s) => (
                         <button
-                          key={status}
-                          onClick={() => updateStatus(member._id, status)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                            member.currentStatus === status
-                              ? "bg-[#6C4EFF] text-white border-[#6C4EFF]"
-                              : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                          key={s.id}
+                          onClick={() => updateStatus(member._id, s.id)}
+                          className={`px-2 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border-2 transition-all ${
+                            member.status === s.id
+                               ? "bg-slate-900 text-white border-slate-900 shadow-lg"
+                               : `bg-white text-slate-600 border-slate-200 ${s.color}`
                           }`}
                         >
-                          <span className="capitalize">{status}</span>
+                          {s.id}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <button
-                    onClick={() => deleteStaff(member._id)}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors border border-red-100"
-                  >
-                    <UserX className="w-4 h-4" />
-                    Delete Staff Member
-                  </button>
+                  <div className="flex items-center justify-between pointer-events-none group-hover:pointer-events-auto opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={() => deleteStaff(member._id)}
+                        className="flex items-center gap-2 px-4 py-2 text-red-600 font-black text-[10px] uppercase tracking-widest hover:bg-red-50 rounded-xl transition-all"
+                      >
+                        <UserX className="w-4 h-4" />
+                        Remove Member
+                      </button>
+                      <button className="text-[10px] font-black text-purple-600 uppercase tracking-widest hover:underline">
+                        View Analytics
+                      </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -385,119 +398,104 @@ export default function StaffPage() {
 
       {/* Add Staff Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-slate-200">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <UserPlus className="w-5 h-5 text-[#6C4EFF]" />
+            <div className="flex items-center justify-between p-8 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-600 rounded-2xl shadow-lg ring-4 ring-purple-100">
+                  <UserPlus className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Add Staff Member</h2>
+                <div>
+                    <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Add Professional</h2>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">New Team Member</p>
+                </div>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-6 h-6 text-slate-400" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-6 space-y-4">
+            <div className="p-8 space-y-6">
               {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <div className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-700 text-xs font-bold">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Full Name *
-                </label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Enter staff member name"
-                    value={newStaff.name}
-                    className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C4EFF] focus:border-transparent"
-                    onChange={(e) =>
-                      setNewStaff({ ...newStaff, name: e.target.value })
-                    }
-                  />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">
+                    Full Identity *
+                  </label>
+                  <div className="relative group">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-purple-600 transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Sameer Khan"
+                      value={newStaff.name}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner"
+                      onChange={(e) =>
+                        setNewStaff({ ...newStaff, name: e.target.value })
+                      }
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Phone Number *
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="tel"
-                    placeholder="10 digit phone number"
-                    value={newStaff.phone}
-                    className={`w-full pl-11 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C4EFF] focus:border-transparent ${phoneError ? 'border-red-500' : 'border-slate-300'}`}
-                    onChange={(e) =>
-                      setNewStaff({ ...newStaff, phone: e.target.value })
-                    }
-                  />
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">
+                    Contact Phone *
+                  </label>
+                  <div className="relative group">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-purple-600 transition-colors" />
+                    <input
+                      type="tel"
+                      placeholder="10 digit cellular number"
+                      value={newStaff.phone}
+                      className={`w-full pl-12 pr-4 py-4 bg-slate-50 border-2 rounded-2xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner ${phoneError ? 'border-red-500' : 'border-slate-100'}`}
+                      onChange={(e) =>
+                        setNewStaff({ ...newStaff, phone: e.target.value })
+                      }
+                    />
+                  </div>
+                  {phoneError && (
+                    <p className="text-red-500 text-[10px] font-black uppercase mt-2 ml-1">{phoneError}</p>
+                  )}
                 </div>
-                {phoneError && (
-                  <p className="text-red-500 text-xs mt-1">{phoneError}</p>
-                )}
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Role
-                </label>
-                <div className="relative">
-                  <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <select
-                    value={newStaff.role}
-                    className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C4EFF] focus:border-transparent appearance-none bg-white"
-                    onChange={(e) =>
-                      setNewStaff({ ...newStaff, role: e.target.value })
-                    }
-                  >
-                    <option value="stylist">Stylist</option>
-                    <option value="manager">Manager</option>
-                    <option value="receptionist">Receptionist</option>
-                  </select>
+                <div>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2 ml-1">
+                    Expertise Skills
+                  </label>
+                  <div className="relative group">
+                    <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-purple-600 transition-colors" />
+                    <input
+                      type="text"
+                      placeholder="e.g. Haircut, Facial, Spa"
+                      value={newStaff.skills}
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner"
+                      onChange={(e) =>
+                        setNewStaff({ ...newStaff, skills: e.target.value })
+                      }
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium mt-2 ml-1 italic">
+                    Use commas to separate multiple talents
+                  </p>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Skills
-                </label>
-                <div className="relative">
-                  <Award className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="e.g. Hair cutting, Coloring, Styling"
-                    value={newStaff.skills}
-                    className="w-full pl-11 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6C4EFF] focus:border-transparent"
-                    onChange={(e) =>
-                      setNewStaff({ ...newStaff, skills: e.target.value })
-                    }
-                  />
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  Separate multiple skills with commas
-                </p>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="flex gap-3 p-6 border-t border-slate-200">
+            <div className="flex gap-4 p-8 bg-slate-50 border-t border-slate-100">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                className="flex-1 px-4 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
                 disabled={submitting}
               >
                 Cancel
@@ -505,17 +503,17 @@ export default function StaffPage() {
               <button
                 onClick={handleAddStaff}
                 disabled={submitting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#6C4EFF] text-white rounded-lg font-semibold hover:bg-[#5a3fd6] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl disabled:opacity-50"
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Adding...
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Syncing...
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-4 h-4" />
-                    Add Staff
+                    <UserPlus className="w-5 h-5" />
+                    Add Member
                   </>
                 )}
               </button>
@@ -525,4 +523,4 @@ export default function StaffPage() {
       )}
     </div>
   );
-}
+}

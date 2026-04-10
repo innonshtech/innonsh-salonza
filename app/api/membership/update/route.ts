@@ -22,20 +22,20 @@ async function handler(req: Request, decoded: any) {
 
     // Build update object
     const updateData: any = {};
-    if (name !== undefined) updateData.name = name;
-    if (price !== undefined) updateData.price = Number(price);
-    if (validity !== undefined) updateData.validity = Number(validity);
-    if (discount !== undefined) updateData.discount = Number(discount);
-    if (benefits !== undefined) updateData.benefits = benefits;
+    if (name !== undefined) updateData.name = name.trim();
+    if (price !== undefined) updateData.price = Number(price) || 0;
+    if (validity !== undefined) updateData.validity = Number(validity) || 365;
+    if (discount !== undefined) updateData.discount = Number(discount) || 0;
+    if (benefits !== undefined) updateData.benefits = String(benefits || "");
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    // Find and verify ownership
-    const membership = await Membership.findOne({ _id: planId });
+    // Find and verify ownership (IDOR Protection)
+    const membership = await Membership.findById(planId);
     if (!membership) {
       return NextResponse.json({ success: false, message: "Membership plan not found" }, { status: 404 });
     }
 
-    if (decoded.role !== "super_admin" && membership.salonId.toString() !== salonId.toString()) {
+    if (decoded.role !== "super_admin" && membership.salonId.toString() !== salonId?.toString()) {
       return NextResponse.json({ success: false, message: "Forbidden: You don't own this membership plan" }, { status: 403 });
     }
 

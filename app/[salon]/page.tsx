@@ -61,7 +61,7 @@ export default async function SalonPublicPage({ params }: any) {
     );
   }
 
-  const services = await Service.find({ salonId: salonDoc._id }).lean();
+  const services = await Service.find({ salonId: salonDoc._id, isActive: { $ne: false } }).lean();
   const offers = await Offer.find({ salonId: salonDoc._id, isActive: true }).lean();
 
   return (

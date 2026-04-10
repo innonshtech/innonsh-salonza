@@ -454,7 +454,7 @@ export default function BookingPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {services.map((s) => {
+                  {services.filter(s => s.isActive !== false).map((s) => {
                     const isSelected = selectedServices.includes(s._id);
                     return (
                       <button
