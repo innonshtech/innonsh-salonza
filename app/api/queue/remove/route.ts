@@ -134,7 +134,10 @@ async function handler(req: Request, decoded: any) {
     if (wasServing && item.staffId) {
       try {
         const Staff = (await import("@/models/Staff")).default;
-        await Staff.findByIdAndUpdate(item.staffId, { status: "available" });
+        await Staff.findByIdAndUpdate(item.staffId, { 
+          status: "available",
+          currentStatus: "available"
+        });
         console.log(`Staff ${item.staffId} set back to available after completing ${item.customerName}`);
       } catch (err) {
         console.error("Error resetting staff status:", err);

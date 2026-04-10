@@ -22,11 +22,21 @@ export async function POST(req: Request) {
         const nextPosition = lastItemInWaiting ? lastItemInWaiting.position + 1 : 1;
 
         // 3. Update the item
+        const staffIdToReset = itemToUnserve.staffId;
         const updatedItem = await Queue.findByIdAndUpdate(id, {
             status: "waiting",
             position: nextPosition,
             $unset: { staffId: 1 }
         }, { new: true });
+
+        // 4. Reset Staff Status
+        if (staffIdToReset) {
+            const Staff = (await import("@/models/Staff")).default;
+            await Staff.findByIdAndUpdate(staffIdToReset, {
+                status: "available",
+                currentStatus: "available"
+            });
+        }
 
         return NextResponse.json({ success: true, item: updatedItem });
     } catch (err: any) {

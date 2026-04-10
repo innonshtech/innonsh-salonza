@@ -57,6 +57,7 @@ interface Service {
   name: string;
   duration: number;
   price: number;
+  isActive?: boolean;
 }
 
 interface QueueItem {
