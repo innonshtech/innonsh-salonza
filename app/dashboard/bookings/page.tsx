@@ -15,7 +15,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Download
+  Download,
+  Timer
 } from "lucide-react";
 
 interface Booking {

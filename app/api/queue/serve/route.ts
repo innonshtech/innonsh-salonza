@@ -32,6 +32,7 @@ export async function POST(req: Request) {
             }
             // Auto update staff status to busy
             staff.status = "busy";
+            (staff as any).currentStatus = "busy";
             await staff.save();
             logToFile(`STAFF UPDATE: Staff ${staffId} set to busy`);
         }
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
                 } else {
                     logToFile(`API WARNING: Linked booking ${item.bookingId} not found`);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 logToFile(`API ERROR updating booking: ${err.message}`);
                 // Continue even if booking update fails - we still want to serve the customer
             }
