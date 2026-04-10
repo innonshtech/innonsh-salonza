@@ -21,7 +21,7 @@ export async function GET(req: Request, { params }: any) {
 
     // Since lean() is used, salon is a POJO. We cast it to ISalon or use its properties carefully.
     const salonData = salon as any;
-    const services = await Service.find({ salonId: salonData._id }).lean();
+    const services = await Service.find({ salonId: salonData._id, isActive: { $ne: false } }).lean();
     const testimonials = await Testimonial.find({ salonId: salonData._id }).lean();
     const offers = await Offer.find({ salonId: salonData._id, isActive: true }).lean();
 

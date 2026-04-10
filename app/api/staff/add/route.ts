@@ -7,7 +7,7 @@ async function handler(req: Request, decoded: any) {
   try {
     await dbConnect();
     const body = await req.json();
-    const { name, phone, role, skills, profileImage } = body;
+    const { name, phone, skills, profileImage } = body;
 
     // IDOR Protection: Always use salonId from JWT
     const salonId = decoded.salonId;
@@ -19,9 +19,10 @@ async function handler(req: Request, decoded: any) {
       salonId,
       name,
       phone,
-      role,
       skills,
-      profileImage
+      profileImage,
+      status: "available",
+      currentStatus: "available"
     });
 
     return NextResponse.json({ success: true, staff });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   Calendar,
@@ -11,7 +11,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  ArrowRight
+  ArrowRight,
+  Package
 } from "lucide-react";
 
 export default function DashboardHome() {
@@ -21,36 +22,80 @@ export default function DashboardHome() {
     todayBookings: 0,
     activeQueue: 0,
     totalServices: 0,
+    inactiveServices: 0,
     monthlyRevenue: 0,
   });
   const [activities, setActivities] = useState<any[]>([]);
   const [schedule, setSchedule] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const hasLoadedRef = useRef(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("salon");
-    if (saved) {
-      const salonData = JSON.parse(saved);
-      setSalon(salonData);
-      loadDashboardData(salonData._id);
-    }
-  }, []);
-
-  async function loadDashboardData(salonId: string) {
+  // Memoize loadDashboardData to prevent recreation on every render
+  const loadDashboardData = useCallback(async (salonId: string) => {
     try {
+      setLoadingStats(true);
       const res = await fetch(`/api/salon/dashboard/stats?salonId=${salonId}`);
+
+      if (!res.ok) {
+        console.error("Dashboard API failed:", res.status);
+        return;
+      }
+
       const data = await res.json();
-      if (data.success) {
-        setStats(data.stats);
-        setActivities(data.recentActivity || []);
-        setSchedule(data.todaysSchedule || []);
+
+      if (data.success && data.stats) {
+        // Only update if data changed (prevents unnecessary re-renders)
+        setStats(prev => {
+          const newStats = data.stats;
+          if (JSON.stringify(prev) === JSON.stringify(newStats)) return prev;
+          return newStats;
+        });
+        setActivities(prev => {
+          const newActivities = data.recentActivity || [];
+          if (JSON.stringify(prev) === JSON.stringify(newActivities)) return prev;
+          return newActivities;
+        });
+        setSchedule(prev => {
+          const newSchedule = data.todaysSchedule || [];
+          if (JSON.stringify(prev) === JSON.stringify(newSchedule)) return prev;
+          return newSchedule;
+        });
       }
     } catch (err) {
       console.error("Dashboard data load error:", err);
     } finally {
       setLoadingStats(false);
     }
-  }
+  }, []);
+
+  // Load salon from localStorage only once on mount
+  useEffect(() => {
+    if (hasLoadedRef.current) return; // Prevent double execution in StrictMode
+
+    const saved = localStorage.getItem("salon");
+    if (saved) {
+      try {
+        const salonData = JSON.parse(saved);
+        setSalon(salonData);
+        loadDashboardData(salonData._id);
+      } catch (error) {
+        console.error("Failed to parse salon from localStorage:", error);
+      }
+    }
+    hasLoadedRef.current = true;
+  }, [loadDashboardData]);
+
+  // Listen for refresh events (payment completion etc)
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (salon && salon._id) {
+        loadDashboardData(salon._id);
+      }
+    };
+
+    window.addEventListener('refreshDashboardStats', handleRefresh);
+    return () => window.removeEventListener('refreshDashboardStats', handleRefresh);
+  }, [salon, loadDashboardData]);
 
   if (!salon) {
     return (
@@ -69,15 +114,15 @@ export default function DashboardHome() {
       value: stats.todayBookings,
       icon: Calendar,
       color: "purple",
-      change: "Today",
+      change: "",
       changeType: "neutral",
     },
     {
-      name: "Active Queue",
+      name: "Waiting",
       value: stats.activeQueue,
       icon: Users,
       color: "blue",
-      change: `${stats.activeQueue} waiting`,
+      change: "",
       changeType: "neutral",
     },
     {
@@ -85,12 +130,12 @@ export default function DashboardHome() {
       value: stats.totalServices,
       icon: Scissors,
       color: "green",
-      change: "Active",
-      changeType: "positive",
+      change: stats.inactiveServices > 0 ? `${stats.inactiveServices} inactive` : "",
+      changeType: "neutral",
     },
     {
       name: "Monthly Revenue",
-      value: `₹${stats.monthlyRevenue.toLocaleString()}`,
+      value: `₹${(stats.monthlyRevenue || 0).toLocaleString()}`,
       icon: TrendingUp,
       color: "orange",
       change: "This Month",
@@ -102,7 +147,7 @@ export default function DashboardHome() {
     { name: "Manage Services", href: "/dashboard/services", icon: Scissors, color: "purple" },
     { name: "View Queue", href: "/dashboard/queue", icon: Users, color: "blue" },
     { name: "All Bookings", href: "/dashboard/bookings", icon: Calendar, color: "green" },
-    { name: "Settings", href: "/dashboard/settings", icon: Clock, color: "orange" },
+    { name: "Inventory", href: "/dashboard/inventory", icon: Package, color: "orange" },
   ];
 
   return (
@@ -184,13 +229,13 @@ export default function DashboardHome() {
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                       <span className="text-purple-700 font-semibold text-sm">
-                        {activity.customerName?.charAt(0)}
+                        {activity.name?.charAt(0)}
                       </span>
                     </div>
                     <div>
-                      <p className="font-semibold text-slate-900">{activity.customerName}</p>
+                      <p className="font-semibold text-slate-900">{activity.name}</p>
                       <p className="text-sm text-slate-600">
-                        {activity.serviceIds?.map((s: any) => s.name).join(", ") || "No services"}
+                        {activity.services}
                       </p>
                     </div>
                   </div>
@@ -202,7 +247,7 @@ export default function DashboardHome() {
                       {activity.status}
                     </span>
                     <p className="text-xs text-slate-500 mt-1">
-                      {new Date(activity.createdAt).toLocaleDateString()}
+                      {new Date(activity.date).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

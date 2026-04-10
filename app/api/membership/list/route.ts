@@ -9,11 +9,16 @@ async function handler(req: Request, decoded: any) {
     const salonId = decoded.salonId;
     console.log("Fetching Membership plans for salonId:", salonId);
 
-    if (!salonId && decoded.role !== "super_admin") {
+    let query: any = { salonId };
+    
+    // If super_admin and no salonId provided, they can see everything (or we can keep it scoped)
+    if (!salonId && decoded.role === "super_admin") {
+      query = {}; // Super admin sees all plans if no specific salon context
+    } else if (!salonId) {
       return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
     }
 
-    const memberships = await Membership.find({ salonId }).sort({ createdAt: -1 });
+    const memberships = await Membership.find(query).sort({ createdAt: -1 });
     console.log("✅ Found plans:", memberships.length);
     return NextResponse.json({ success: true, data: memberships });
   } catch (error: any) {

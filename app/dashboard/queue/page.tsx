@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/components/ui/Toast";
 import {
   Users,
   Plus,
@@ -49,6 +50,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
+import FeedbackModal from "@/components/FeedbackModal";
 
 interface Service {
   _id: string;
@@ -61,11 +63,16 @@ interface QueueItem {
   _id: string;
   position: number;
   customerName: string;
+  customerPhone?: string;
   serviceId: string;
   serviceIds: string[];
   status: "waiting" | "serving";
   staffId?: string;
+  bookingId?: string; // Linked booking (if any)
   createdAt: string;
+  totalDuration: number;
+  waitTime: number;
+  estimatedStartTime: string;
 }
 
 function QueueCard({ item, getServiceName, getEstimatedWait, onRemove, onServe, isServing, isDragging, dragOverlay, attributes, listeners }: any) {
@@ -106,12 +113,24 @@ function QueueCard({ item, getServiceName, getEstimatedWait, onRemove, onServe, 
 
         {/* Services */}
         <div className="flex flex-wrap gap-1 mt-1">
-          {(item.serviceIds || [item.serviceId]).map((sid: string, idx: number) => (
-            <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-[10px] text-purple-700 font-medium rounded-md border border-purple-100">
-              <Scissors className="w-2.5 h-2.5" />
-              {getServiceName(sid)}
-            </span>
-          ))}
+          {(item.services && item.services.length > 0) ? (
+            item.services.map((s: any, idx: number) => (
+              <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-[10px] text-purple-700 font-medium rounded-md border border-purple-100">
+                <Scissors className="w-2.5 h-2.5" />
+                {s.name}
+              </span>
+            ))
+          ) : (
+            (item.serviceIds || [item.serviceId]).map((sid: string, idx: number) => (
+              <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-[10px] text-purple-700 font-medium rounded-md border border-purple-100">
+                <Scissors className="w-2.5 h-2.5" />
+                {getServiceName(sid)}
+              </span>
+            ))
+          )}
+        </div>
+        <div className="text-[9px] text-slate-500 font-medium mt-1">
+          Duration: {item.totalDuration || 0} mins
         </div>
 
         {/* Mobile Wait Time */}
@@ -120,7 +139,7 @@ function QueueCard({ item, getServiceName, getEstimatedWait, onRemove, onServe, 
             <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 rounded-md border border-purple-100">
               <Timer className="w-3 h-3 text-purple-600" />
               <span className="text-[10px] font-medium text-purple-700">
-                {getEstimatedWait(item.position)}
+                {typeof getEstimatedWait(item) === 'string' ? getEstimatedWait(item) : new Date(item.estimatedStartTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           </div>
@@ -132,8 +151,8 @@ function QueueCard({ item, getServiceName, getEstimatedWait, onRemove, onServe, 
         {/* Desktop Wait Time */}
         {!isServing && (
           <div className="text-right hidden sm:flex flex-col mr-2 min-w-[60px]">
-            <div className="text-xs font-bold text-slate-900">
-              {getEstimatedWait(item.position)}
+            <div className={`text-xs font-bold ${item.waitTime === 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+              {getEstimatedWait(item)}
             </div>
             <div className="text-[8px] text-slate-500 uppercase font-medium tracking-wide">
               Est. Wait
@@ -141,16 +160,7 @@ function QueueCard({ item, getServiceName, getEstimatedWait, onRemove, onServe, 
           </div>
         )}
 
-        {/* Serve Button */}
-        {!isServing && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onServe(item._id); }}
-            className="p-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-sm hover:shadow"
-            title="Start Serving"
-          >
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        )}
+
 
         {/* Complete/Remove Button */}
         <button
@@ -236,43 +246,27 @@ function DropZone({ id, label, icon: Icon, children, colorClass, count }: any) {
   );
 }
 
-function DoneDropZone() {
-  const { setNodeRef, isOver } = useDroppable({
-    id: 'done',
-    data: {
-      type: 'container',
-      container: 'done'
-    }
-  });
 
-  return (
-    <div
-      ref={setNodeRef}
-      className={`p-6 border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-all touch-none ${isOver
-        ? 'bg-emerald-50 border-emerald-500 shadow-lg'
-        : 'bg-slate-50 border-slate-300 hover:border-slate-400'
-        }`}
-    >
-      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-2 ${isOver ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-white border border-slate-200'
-        }`}>
-        <CheckCircle2 className={`w-6 h-6 ${isOver ? 'text-white' : 'text-slate-400'}`} />
-      </div>
-      <h3 className={`font-semibold ${isOver ? 'text-emerald-700' : 'text-slate-600'}`}>
-        {isOver ? 'Release to Complete!' : 'Drag Here to Finish'}
-      </h3>
-      <p className="text-[9px] text-slate-500 uppercase font-medium mt-1">Complete Service</p>
-    </div>
-  );
-}
-
-function StaffSeat({ staff, servingItems, getServiceName, onRemove, onServe, startServe, allServices, onUpdateServices }: any) {
+function StaffSeat({ staff, servingItems, getServiceName, onRemove, onServe, startServe, allServices, onUpdateServices, onUnserve }: any) {
   const staffServing = servingItems.filter((i: any) => i.staffId === staff._id);
   const isOccupied = staffServing.length > 0;
   const customer = staffServing[0];
   const [showAddService, setShowAddService] = useState(false);
 
+  // Status mapping
+  const statusConfig: any = {
+    available: { color: 'text-green-500', bg: 'bg-green-500', label: 'Available' },
+    busy: { color: 'text-yellow-600', bg: 'bg-yellow-500', label: 'Busy' },
+    break: { color: 'text-orange-500', bg: 'bg-orange-500', label: 'On Break' },
+    offline: { color: 'text-red-500', bg: 'bg-red-500', label: 'Offline' }
+  };
+
+  const currentStatus = statusConfig[staff.status] || statusConfig.available;
+  const isUnavailable = staff.status === "break" || staff.status === "offline";
+
   const { setNodeRef, isOver } = useDroppable({
     id: `serving-${staff._id}`,
+    disabled: isUnavailable || isOccupied,
     data: {
       type: 'container',
       container: `serving-${staff._id}`
@@ -290,59 +284,82 @@ function StaffSeat({ staff, servingItems, getServiceName, onRemove, onServe, sta
           ? 'border-purple-500 bg-purple-50 shadow-md'
           : isOccupied
             ? 'border-emerald-300 bg-white shadow-sm'
-            : 'border-slate-200 bg-slate-50 hover:border-purple-300 hover:bg-white'
+            : isUnavailable
+              ? 'border-slate-100 bg-slate-50/50 opacity-80 cursor-not-allowed'
+              : 'border-slate-200 bg-white hover:border-purple-300 shadow-sm'
         }
         w-full min-w-[140px]
       `}>
         {/* Seat Icon & Staff Name */}
         <div className="flex flex-col items-center gap-2 mb-2 w-full">
-          <div className={`
-            w-12 h-12 rounded-lg flex items-center justify-center transition-all
-            ${isOccupied
-              ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
-              : 'bg-white border border-slate-200 text-slate-400 group-hover:text-purple-500 group-hover:border-purple-300'
-            }
-          `}>
-            {isOccupied ? <User className="w-6 h-6" /> : <Armchair className="w-6 h-6" />}
+          <div className="relative">
+            <div className={`
+                w-12 h-12 rounded-lg flex items-center justify-center transition-all
+                ${isOccupied
+                ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-lg'
+                : 'bg-slate-50 border border-slate-200 text-slate-400 group-hover:text-purple-500 group-hover:border-purple-300'
+                }
+            `}>
+                {isOccupied ? <User className="w-6 h-6" /> : <Armchair className="w-6 h-6" />}
+            </div>
+            {/* Status Dot */}
+            <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-2 border-white rounded-full ${currentStatus.bg} shadow-sm animate-pulse`} />
           </div>
+          
           <div className="text-center w-full">
-            <span className="text-xs font-semibold text-slate-900 block truncate px-1">
+            <span className="text-xs font-bold text-slate-900 block truncate px-1">
               {staff.name}
             </span>
-            <span className={`text-[8px] font-medium uppercase mt-0.5 block ${isOccupied ? 'text-emerald-600' : 'text-slate-400'}`}>
-              {isOccupied ? 'Occupied' : 'Available'}
-            </span>
+            <div className={`flex items-center justify-center gap-1 text-[8px] font-black uppercase tracking-tighter mt-0.5 ${currentStatus.color}`}>
+              {currentStatus.label}
+            </div>
           </div>
         </div>
 
         {/* Status/Customer Info */}
         <div className="w-full">
           {isOccupied ? (
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-2 border border-emerald-200">
+            <div className="bg-emerald-50/50 rounded-lg p-2 border border-emerald-100">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-7 h-7 rounded-md bg-gradient-to-r from-emerald-500 to-green-600 text-white flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-md bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
                   <span className="font-bold text-xs">{customer.customerName.charAt(0).toUpperCase()}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-emerald-900 truncate">
+                  <div className="text-xs font-bold text-emerald-900 truncate">
                     {customer.customerName}
                   </div>
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onUnserve(customer._id); }}
+                  className="p-1 hover:bg-emerald-100 rounded text-emerald-600 transition-colors"
+                  title="Unassign"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-1 mb-2">
-                {(customer.serviceIds || [customer.serviceId]).map((sid: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-0.5 text-[8px] bg-white text-emerald-700 font-medium px-1.5 py-0.5 rounded border border-emerald-200">
-                    <Scissors className="w-2 h-2" />
-                    {getServiceName(sid)}
-                  </div>
-                ))}
+                {(customer.services && customer.services.length > 0) ? (
+                  customer.services.map((s: any, idx: number) => (
+                    <div key={idx} className="flex items-center gap-0.5 text-[8px] bg-white text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-100">
+                      <Scissors className="w-2 h-2" />
+                      {s.name}
+                    </div>
+                  ))
+                ) : (
+                  (customer.serviceIds || [customer.serviceId]).map((sid: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-0.5 text-[8px] bg-white text-emerald-700 font-bold px-1.5 py-0.5 rounded border border-emerald-100">
+                      <Scissors className="w-2 h-2" />
+                      {getServiceName(sid)}
+                    </div>
+                  ))
+                )}
               </div>
 
               {showAddService ? (
-                <div className="space-y-1 mt-2 pt-2 border-t border-emerald-200">
+                <div className="space-y-1 mt-2 pt-2 border-t border-emerald-100">
                   <select
-                    className="w-full text-[9px] font-medium p-1.5 border border-emerald-200 rounded bg-white outline-none focus:border-emerald-400"
+                    className="w-full text-[9px] font-black p-1.5 border border-emerald-100 rounded bg-white outline-none focus:border-emerald-400"
                     onChange={(e) => {
                       if (e.target.value) {
                         onUpdateServices(customer._id, [...(customer.serviceIds || [customer.serviceId]), e.target.value]);
@@ -350,41 +367,41 @@ function StaffSeat({ staff, servingItems, getServiceName, onRemove, onServe, sta
                       }
                     }}
                   >
-                    <option value="">Select Service to Add</option>
-                    {allServices.map((s: any) => (
+                    <option value="">+ ADD SERVICE</option>
+                    {allServices.filter((s: any) => s.isActive !== false).map((s: any) => (
                       <option key={s._id} value={s._id}>{s.name} - ₹{s.price}</option>
                     ))}
                   </select>
                   <button
                     onClick={() => setShowAddService(false)}
-                    className="w-full text-[8px] font-medium text-slate-500 hover:text-slate-700 py-0.5"
+                    className="w-full text-[8px] font-black text-slate-400 hover:text-slate-600 py-1 uppercase tracking-tighter"
                   >
                     Cancel
                   </button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-emerald-200">
+                <div className="flex flex-col gap-1 mt-2 pt-2 border-t border-emerald-100">
                   <button
                     onClick={() => setShowAddService(true)}
-                    className="w-full py-1.5 bg-white text-emerald-700 rounded text-[9px] font-medium hover:bg-emerald-100 transition-all border border-emerald-200 flex items-center justify-center gap-0.5"
+                    className="w-full py-1.5 bg-white text-emerald-700 rounded-lg text-[9px] font-black hover:bg-emerald-50 transition-all border border-emerald-100 flex items-center justify-center gap-1 uppercase tracking-tighter"
                   >
                     <Plus className="w-2.5 h-2.5" />
-                    ADD SERVICE
+                    Add Service
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); onRemove(customer._id, customer.customerName, true); }}
-                    className="w-full py-1.5 bg-gradient-to-r from-emerald-600 to-green-700 text-white rounded text-[9px] font-medium hover:from-emerald-700 hover:to-green-800 transition-all shadow-sm flex items-center justify-center gap-0.5"
+                    className="w-full py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black hover:bg-emerald-700 transition-all shadow-sm flex items-center justify-center gap-1 uppercase tracking-tighter"
                   >
                     <Check className="w-2.5 h-2.5" />
-                    COMPLETE
+                    Complete
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="py-3 text-center">
-              <span className={`text-[10px] font-medium ${isOver ? 'text-purple-600' : 'text-slate-400'}`}>
-                {isOver ? 'DROP HERE' : 'READY'}
+            <div className="py-2 text-center">
+              <span className={`text-[10px] font-black uppercase tracking-tighter ${isOver ? 'text-purple-600' : isUnavailable ? 'text-slate-300' : 'text-slate-400'}`}>
+                {isOver ? 'RELEASE' : isUnavailable ? 'NOT AVAILABLE' : 'READY'}
               </span>
             </div>
           )}
@@ -402,6 +419,7 @@ function PaymentModal({ isOpen, onClose, customer, services, onComplete }: any) 
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [cashAmount, setCashAmount] = useState(0);
   const [onlineAmount, setOnlineAmount] = useState(0);
+  const [processing, setProcessing] = useState(false);
 
   const subtotal = (customer.serviceIds || [customer.serviceId]).reduce((sum: number, sid: string) => {
     const s = services.find((srv: any) => srv._id === sid);
@@ -560,19 +578,40 @@ function PaymentModal({ isOpen, onClose, customer, services, onComplete }: any) 
             <button
               onClick={onClose}
               className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-medium rounded-lg hover:bg-slate-200 transition-all text-xs"
+              disabled={processing}
             >
               Cancel
             </button>
             <button
-              onClick={() => onComplete({
-                paymentMethod,
-                paymentSplit: { cash: cashAmount, online: onlineAmount },
-                discount: { type: discountType, value: discountValue, amount: discountAmount }
-              })}
-              className="flex-2 flex-[2] py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-medium rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all shadow-sm text-xs flex items-center justify-center gap-1.5"
+              onClick={async () => {
+                setProcessing(true);
+                try {
+                  await onComplete({
+                    paymentMethod,
+                    paymentSplit: { cash: cashAmount, online: onlineAmount },
+                    discount: { type: discountType, value: discountValue, amount: discountAmount }
+                  });
+                  // onComplete (parent) will close modal on success
+                } catch (error) {
+                  // Error toast is handled in parent, modal stays open
+                } finally {
+                  setProcessing(false);
+                }
+              }}
+              disabled={processing}
+              className="flex-2 flex-[2] py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white font-medium rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all shadow-sm text-xs flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Check className="w-3.5 h-3.5" />
-              COMPLETE ORDER
+              {processing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  COMPLETE ORDER
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -591,12 +630,18 @@ export default function QueueManagement() {
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
 
   // Payment Modal State
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [completingItem, setCompletingItem] = useState<QueueItem | null>(null);
+  // Feedback Modal State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackCustomer, setFeedbackCustomer] = useState<any>(null);
+
+  const { showToast } = useToast();
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -632,6 +677,7 @@ export default function QueueManagement() {
         headers: { "Authorization": `Bearer ${token}` }
       });
       const data = await res.json();
+      console.log("Queue Data Received:", data.queue);
       setQueue(data.queue || []);
     } catch (error) {
       console.error("Error loading queue:", error);
@@ -675,9 +721,9 @@ export default function QueueManagement() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          salonId: salon._id,
           customerName,
           customerPhone,
+          scheduledAt: scheduledTime ? new Date(`${new Date().toISOString().split('T')[0]}T${scheduledTime}:00`) : new Date(),
           serviceIds: selectedServices
         }),
       });
@@ -685,6 +731,7 @@ export default function QueueManagement() {
       await loadQueue(salon._id);
       setCustomerName("");
       setCustomerPhone("");
+      setScheduledTime("");
       setSelectedServices([]);
     } catch (error) {
       console.error("Error adding to queue:", error);
@@ -748,7 +795,12 @@ export default function QueueManagement() {
     }
   }
 
+
   async function handleRemove(id: string, customerName: string, isServing: boolean, skipConfirm = false, paymentData: any = null) {
+    console.log("Completing Payment - Queue Item ID:", id);
+    if (paymentData) {
+      console.log("Payment Data:", paymentData);
+    }
     if (isServing && !paymentData) {
       const item = queue.find(i => i._id === id);
       if (item) {
@@ -762,9 +814,9 @@ export default function QueueManagement() {
     if (!skipConfirm && !confirm(`Mark ${customerName} as ${action}d?`)) return;
 
     try {
-      await fetch(`/api/queue/remove`, {
+      const res = await fetch(`/api/queue/remove`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
@@ -773,11 +825,36 @@ export default function QueueManagement() {
           ...paymentData
         }),
       });
+
+      const data = await res.json();
+
+      console.log("Payment API Response:", data);
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || `Failed to ${action}`);
+      }
+
       setShowPaymentModal(false);
       setCompletingItem(null);
-      loadQueue(salon._id);
-    } catch (error) {
-      console.error("Error removing:", error);
+      await loadQueue(salon._id);
+      // Notify dashboard to refresh stats
+      window.dispatchEvent(new Event('refreshDashboardStats'));
+
+      // Show toast and trigger feedback if serving
+      if (isServing) {
+        showToast("Payment completed successfully", "success");
+        const currItem = queue.find(i => i._id === id);
+        setFeedbackCustomer({ name: customerName, phone: currItem?.customerPhone || "" });
+        setShowFeedbackModal(true);
+      } else {
+        showToast(`${customerName} removed from queue`, "success");
+      }
+
+    } catch (error: any) {
+      console.error(error);
+      showToast(`Failed: ${error.message || "Unknown error"}`, "error");
+      // Re-throw to keep modal open if it's a serving completion
+      if (isServing) throw error;
     }
   }
 
@@ -801,7 +878,7 @@ export default function QueueManagement() {
     } else if (overData?.type === 'item') {
       targetContainer = overData.container;
     } else {
-      if (over.id === 'serving' || over.id === 'waiting' || over.id === 'done') {
+      if (over.id === 'serving' || over.id === 'waiting') {
         targetContainer = over.id;
       }
     }
@@ -812,21 +889,18 @@ export default function QueueManagement() {
 
     if (currentStatus === "waiting" && targetContainer.startsWith("serving-")) {
       const staffId = targetContainer.replace("serving-", "");
+      const targetStaff = staff.find(s => s._id === staffId);
+      
+      if (targetStaff && (targetStaff.status === "break" || targetStaff.status === "offline")) {
+        showToast(`Cannot assign: ${targetStaff.name} is on ${targetStaff.status}`, "error");
+        return;
+      }
+      
       await startServe(activeItem._id, staffId);
     } else if (currentStatus === "waiting" && targetContainer === "serving") {
       await startServe(activeItem._id);
     } else if (currentStatus === "serving" && targetContainer === "waiting") {
       await unserve(activeItem._id);
-    } else if (targetContainer === "done") {
-      if (activeItem.status === "serving") {
-        setCompletingItem(activeItem);
-        setShowPaymentModal(true);
-      } else {
-        await handleRemove(activeItem._id, activeItem.customerName, false, true);
-      }
-    } else if (targetContainer.startsWith("serving-") && currentStatus === "serving" && activeItem.staffId !== targetContainer.replace("serving-", "")) {
-      const staffId = targetContainer.replace("serving-", "");
-      await startServe(activeItem._id, staffId);
     } else if (currentStatus === "waiting" && targetContainer === "waiting" && active.id !== over.id) {
       const waitingItems = queue.filter(i => i.status === "waiting");
       const servingItems = queue.filter(i => i.status === "serving");
@@ -861,14 +935,21 @@ export default function QueueManagement() {
     return service?.name || "Unknown";
   }
 
-  function getEstimatedWait(position: number) {
-    if (position === 1) return "Next Up";
-    const avgTime = 30;
-    const waitTime = (position - 1) * avgTime;
-    if (waitTime < 60) return `~${waitTime} min`;
-    const hours = Math.floor(waitTime / 60);
-    const mins = waitTime % 60;
-    return mins > 0 ? `~${hours}h ${mins}m` : `~${hours}h`;
+  function getEstimatedWait(item: any) {
+    if (item.status === "serving") return "Serving";
+    if (item.waitTime === 0) return "Starts Now";
+
+    const startTime = new Date(item.estimatedStartTime).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return (
+      <div className="flex flex-col items-end">
+        <span className="text-purple-700 font-bold">{startTime}</span>
+        <span className="text-[10px] text-slate-400 font-normal">Wait: {item.waitTime}m</span>
+      </div>
+    );
   }
 
   const toggleService = (serviceId: string) => {
@@ -973,6 +1054,22 @@ export default function QueueManagement() {
                 />
               </div>
             </div>
+
+            {/* Scheduled Time Input */}
+            <div className="relative group">
+              <label className="block text-xs font-medium text-slate-700 mb-2">
+                Scheduled Time (Optional)
+              </label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-purple-600 transition-colors pointer-events-none" />
+                <input
+                  type="time"
+                  value={scheduledTime}
+                  onChange={(e) => setScheduledTime(e.target.value)}
+                  className="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all font-medium text-sm"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Services Selection */}
@@ -981,7 +1078,7 @@ export default function QueueManagement() {
               Select Services *
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {services.map((service) => {
+              {services.filter(s => s.isActive !== false).map((service) => {
                 const isSelected = selectedServices.includes(service._id);
                 return (
                   <button
@@ -1066,9 +1163,6 @@ export default function QueueManagement() {
         onDragEnd={handleDragEnd}
       >
         <div className="space-y-6">
-          {/* Done Drop Zone */}
-          <DoneDropZone />
-
           {/* Queue Columns */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Staff Seats & Unassigned */}
@@ -1097,6 +1191,7 @@ export default function QueueManagement() {
                     startServe={startServe}
                     allServices={services}
                     onUpdateServices={handleUpdateServices}
+                    onUnserve={unserve}
                   />
                 ))}
               </div>
@@ -1185,17 +1280,28 @@ export default function QueueManagement() {
         </DragOverlay>
       </DndContext>
 
-      <PaymentModal
-        isOpen={showPaymentModal}
-        onClose={() => { setShowPaymentModal(false); setCompletingItem(null); }}
-        customer={completingItem}
-        services={services}
-        onComplete={(paymentData: any) => {
-          if (completingItem) {
-            handleRemove(completingItem._id, completingItem.customerName, true, true, paymentData);
-          }
-        }}
-      />
+      {showPaymentModal && completingItem && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => { setShowPaymentModal(false); setCompletingItem(null); }}
+          customer={completingItem}
+          services={services}
+          onComplete={(paymentData: any) => {
+            if (completingItem) {
+              return handleRemove(completingItem._id, completingItem.customerName, true, true, paymentData);
+            }
+          }}
+        />
+      )}
+
+      {showFeedbackModal && feedbackCustomer && (
+        <FeedbackModal
+          isOpen={showFeedbackModal}
+          onClose={() => { setShowFeedbackModal(false); setFeedbackCustomer(null); }}
+          customer={feedbackCustomer}
+          salonId={salon?._id}
+        />
+      )}
 
       {/* Tips */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
@@ -1207,7 +1313,7 @@ export default function QueueManagement() {
             <h3 className="font-medium text-blue-900 mb-1">Queue Management Tips</h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>• Drag customers from Waiting List to Staff Seats to start service</li>
-              <li>• Drag serving customers to Done zone to complete and collect payment</li>
+              <li>• Click COMPLETE on serving customers to complete service and collect payment</li>
               <li>• Reorder waiting customers by dragging them within the Waiting List</li>
               <li>• Click the + button on serving customers to add additional services</li>
             </ul>

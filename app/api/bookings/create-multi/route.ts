@@ -40,8 +40,10 @@ export async function POST(req: Request) {
     }
 
     // 3. Calculate total duration & price
-    const totalDuration = services.reduce((sum, s) => sum + s.duration, 0);
-    const totalPrice = services.reduce((sum, s) => sum + s.price, 0);
+    const totalDuration = services.reduce((sum, s) => sum + Number(s.duration || 0), 0);
+    console.log("Adding to Queue - Fetched Services:", services.map(s => ({ name: s.name, duration: s.duration })));
+    console.log("Total Calculated Duration:", totalDuration);
+    const totalPrice = services.reduce((sum, s) => sum + Number(s.price || 0), 0);
 
     // 4. Create booking in DB
     const booking = await Booking.create({
@@ -52,6 +54,8 @@ export async function POST(req: Request) {
       totalDuration,
       totalPrice,
       date: new Date(date),
+      scheduledAt: new Date(date),
+      isWalkIn: false,
       status: "upcoming",
     });
 
@@ -67,8 +71,11 @@ export async function POST(req: Request) {
       salonId: salon._id,
       customerName,
       serviceIds,
+      services: services.map(s => ({ name: s.name, duration: s.duration })),
       position: nextPosition,
       estimatedMinutes: totalDuration,
+      scheduledAt: new Date(date),
+      isWalkIn: false,
       bookingId: booking._id,
     });
 

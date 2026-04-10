@@ -13,7 +13,11 @@ import {
   X,
   Save,
   Image as ImageIcon,
+  Activity,
+  Calendar as CalendarIcon,
+  ChevronRight,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { uploadImage, CLOUDINARY_ENABLED } from "@/lib/cloudinary";
 
 interface Service {
@@ -23,6 +27,7 @@ interface Service {
   price: number;
   image?: string | null;
   description?: string;
+  isActive?: boolean;
 }
 
 export default function ManageServices() {
@@ -50,6 +55,9 @@ export default function ManageServices() {
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editImagePreview, setEditImagePreview] = useState<string | null>(null);
 
+  const [activityData, setActivityData] = useState<any>(null);
+  const router = useRouter();
+
   const cloudinaryEnabled = CLOUDINARY_ENABLED;
 
   const mountedRef = useRef(false);
@@ -61,12 +69,27 @@ export default function ManageServices() {
       const s = JSON.parse(saved);
       setSalon(s);
       loadServices(s._id);
+      loadActivityData();
     }
     return () => {
       mountedRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function loadActivityData() {
+    try {
+      const res = await fetch("/api/salon/services/activity", {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActivityData(data);
+      }
+    } catch (err) {
+      console.error("loadActivityData:", err);
+    }
+  }
 
   async function loadServices(id: string) {
     try {
@@ -287,6 +310,32 @@ export default function ManageServices() {
     }
   }
 
+  async function toggleService(id: string) {
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/salon/services/toggle`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ serviceId: id }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await loadServices(salon._id);
+        showToast("Service status updated", "success");
+      } else {
+        showToast(data?.message || "Failed to toggle service", "error");
+      }
+    } catch (err: any) {
+      console.error("toggle error:", err);
+      showToast("Failed to toggle service", "error");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   // helper: clear add image
   function clearAddImage() {
     setImageFile(null);
@@ -308,6 +357,93 @@ export default function ManageServices() {
         <p className="mt-2 text-slate-600">
           Add and manage services offered at {salon?.name || "your salon"}
         </p>
+      </div>
+
+      {/* Analytics & Activity */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Service Status */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-purple-600" />
+              Service Status
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                <p className="text-sm font-medium text-emerald-600 mb-1">Active</p>
+                <p className="text-2xl font-bold text-emerald-900">{activityData?.counts?.active || 0}</p>
+              </div>
+              {activityData?.counts?.inactive > 0 && (
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <p className="text-sm font-medium text-slate-600 mb-1">Inactive</p>
+                  <p className="text-2xl font-bold text-slate-900">{activityData.counts.inactive}</p>
+                </div>
+              )}
+            </div>
+            
+            <button 
+              onClick={() => router.push("/dashboard/bookings")}
+              className="w-full mt-6 py-3 px-4 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+            >
+              View All Activity
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Today's Activity */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-blue-600" />
+            Today's Activity
+          </h2>
+          <div className="space-y-3">
+            {!activityData?.todaysActivity?.length ? (
+              <p className="text-sm text-slate-500 py-4 text-center">No activity today</p>
+            ) : (
+              activityData.todaysActivity.map((item: any) => (
+                <div key={item._id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="font-semibold text-slate-900 text-sm">{item.customerName}</p>
+                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">
+                      {new Date(item.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 truncate">
+                    {item.serviceIds?.map((s: any) => s.name).join(", ")}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Upcoming Activity */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <CalendarIcon className="w-5 h-5 text-emerald-600" />
+            Upcoming
+          </h2>
+          <div className="space-y-3">
+            {!activityData?.upcomingActivity?.length ? (
+              <p className="text-sm text-slate-500 py-4 text-center">No upcoming bookings</p>
+            ) : (
+              activityData.upcomingActivity.map((item: any) => (
+                <div key={item._id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="font-semibold text-slate-900 text-sm">{item.customerName}</p>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">
+                      {new Date(item.date).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 truncate">
+                    {item.serviceIds?.map((s: any) => s.name).join(", ")}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Add Service */}
@@ -504,18 +640,29 @@ export default function ManageServices() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex-1 flex items-center gap-6">
-                      <div className="w-16 h-16 bg-white rounded-lg overflow-hidden flex items-center justify-center border">
+                    <div className={`flex-1 flex items-center gap-6 transition-opacity duration-300 ${!service.isActive ? 'opacity-50 grayscale' : ''}`}>
+                      <div className="w-16 h-16 bg-white rounded-lg overflow-hidden flex items-center justify-center border relative">
                         {service.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
                           <img src={service.image} alt={service.name} className="w-full h-full object-cover" />
                         ) : (
                           <Scissors className="w-6 h-6 text-slate-400" />
                         )}
+                        {!service.isActive && (
+                          <div className="absolute inset-0 bg-slate-100/50 flex flex-col items-center justify-center text-[10px] uppercase font-bold text-slate-600">
+                             Off
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex-1">
-                        <h3 className="font-semibold text-slate-900">{service.name}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-slate-900">{service.name}</h3>
+                          {!service.isActive && (
+                            <span className="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">
+                              Inactive
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
@@ -533,6 +680,18 @@ export default function ManageServices() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 ml-4">
+                    {!isEditing && (
+                      <label className="relative inline-flex items-center cursor-pointer mr-2">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={service.isActive ?? true}
+                          onChange={() => toggleService(service._id)}
+                          disabled={busyId === service._id}
+                        />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
+                      </label>
+                    )}
                     {isEditing ? (
                       <>
                         <button
