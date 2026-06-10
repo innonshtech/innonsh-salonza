@@ -1,12 +1,29 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <>
-      <nav className="nav" id="nav">
+      <nav className={`nav ${scrolled ? 'scrolled' : ''}`} id="nav">
   <div className="wrap nav-inner">
     <a href="#top" className="logo">
       <img src="/salon_logo.png" alt="Innonsh Salonza Logo" className="h-8 w-auto" />
