@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
+import { securityLogger } from "@/lib/logger";
 
 export const ROLES = {
   SUPER_ADMIN: "super_admin",
@@ -32,15 +33,18 @@ export function withRBAC(allowedRoles: string[], handler: Function) {
     try {
       const token = req.cookies.get("authToken")?.value;
       if (!token) {
+        securityLogger.warn({ event: "unauthorized_access_attempt", ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"), url: req.nextUrl.pathname }, "Missing authToken");
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
       }
 
       const decoded: any = verifyToken(token);
       if (!decoded) {
+        securityLogger.warn({ event: "unauthorized_access_attempt", ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"), url: req.nextUrl.pathname }, "Invalid authToken");
         return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
       }
       
       if (!hasPermission(decoded.role, allowedRoles)) {
+        securityLogger.warn({ event: "forbidden_access_attempt", userId: decoded.userId, role: decoded.role, url: req.nextUrl.pathname, ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") }, "User attempted to access route without sufficient permissions");
         return NextResponse.json({ success: false, message: "Forbidden: Insufficient permissions" }, { status: 403 });
       }
 
