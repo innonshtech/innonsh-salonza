@@ -33,18 +33,18 @@ export function withRBAC(allowedRoles: string[], handler: Function) {
     try {
       const token = req.cookies.get("authToken")?.value;
       if (!token) {
-        securityLogger.warn({ event: "unauthorized_access_attempt", ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"), url: req.nextUrl.pathname }, "Missing authToken");
+        securityLogger.warn("Missing authToken", { event: "unauthorized_access_attempt", ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"), url: req.nextUrl.pathname });
         return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
       }
 
       const decoded: any = verifyToken(token);
       if (!decoded) {
-        securityLogger.warn({ event: "unauthorized_access_attempt", ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"), url: req.nextUrl.pathname }, "Invalid authToken");
+        securityLogger.warn("Invalid authToken", { event: "unauthorized_access_attempt", ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip"), url: req.nextUrl.pathname });
         return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
       }
       
       if (!hasPermission(decoded.role, allowedRoles)) {
-        securityLogger.warn({ event: "forbidden_access_attempt", userId: decoded.userId, role: decoded.role, url: req.nextUrl.pathname, ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") }, "User attempted to access route without sufficient permissions");
+        securityLogger.warn("User attempted to access route without sufficient permissions", { event: "forbidden_access_attempt", userId: decoded.userId, role: decoded.role, url: req.nextUrl.pathname, ip: req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") });
         return NextResponse.json({ success: false, message: "Forbidden: Insufficient permissions" }, { status: 403 });
       }
 
