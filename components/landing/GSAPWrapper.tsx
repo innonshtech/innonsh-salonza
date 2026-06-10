@@ -12,9 +12,9 @@ export default function GSAPWrapper({ children }: { children: React.ReactNode })
 
   useGSAP(() => {
     // Basic animation defaults
-    const isScale = (el) => el.getAttribute('data-anim') === 'scale';
+    const isScale = (el: any) => el.getAttribute('data-anim') === 'scale';
     
-    gsap.utils.toArray('[data-anim]').forEach((el) => {
+    gsap.utils.toArray('[data-anim]').forEach((el: any) => {
       gsap.fromTo(el,
         isScale(el) ? {opacity:0, scale:0.92} : {opacity:0, y:34},
         {
@@ -24,7 +24,7 @@ export default function GSAPWrapper({ children }: { children: React.ReactNode })
       );
     });
 
-    ['.problem-grid','.modules-grid','.roles-grid','.stats-grid'].forEach((sel) => {
+    ['.problem-grid','.modules-grid','.roles-grid','.stats-grid'].forEach((sel: string) => {
       const parent = document.querySelector(sel);
       if(!parent) return;
       gsap.set(parent.children, {opacity:0, y:34});
@@ -37,7 +37,7 @@ export default function GSAPWrapper({ children }: { children: React.ReactNode })
     });
 
     // Counters
-    document.querySelectorAll('[data-count]').forEach((el) => {
+    document.querySelectorAll('[data-count]').forEach((el: any) => {
       const target = parseFloat(el.getAttribute('data-count'));
       const dec = parseInt(el.getAttribute('data-decimals')||'0',10);
       const obj = {v:0};
@@ -54,7 +54,7 @@ export default function GSAPWrapper({ children }: { children: React.ReactNode })
     // Parallax
     const heroVisual = document.getElementById('heroVisual');
     const pItems = document.querySelectorAll('[data-parallax]');
-    pItems.forEach((el) => {
+    pItems.forEach((el: any) => {
       const depth = parseFloat(el.getAttribute('data-parallax'));
       gsap.to(el, {
         y: depth, ease:'none',
@@ -63,7 +63,7 @@ export default function GSAPWrapper({ children }: { children: React.ReactNode })
     });
 
     // Chart Line
-    const line = document.getElementById('linePath');
+    const line = document.getElementById('linePath') as any;
     if(line){
       const len = line.getTotalLength();
       gsap.set(line, {strokeDasharray:len, strokeDashoffset:len});
@@ -78,12 +78,12 @@ export default function GSAPWrapper({ children }: { children: React.ReactNode })
     if(marquee){
       const totalW = marquee.scrollWidth / 2;
       const loop = gsap.to(marquee, { x: -totalW, duration:36, ease:'none', repeat:-1 });
-      marquee.parentElement.addEventListener('mouseenter', () => gsap.to(loop,{timeScale:0, duration:0.5}));
-      marquee.parentElement.addEventListener('mouseleave', () => gsap.to(loop,{timeScale:1, duration:0.5}));
+      marquee.parentElement?.addEventListener('mouseenter', () => gsap.to(loop,{timeScale:0, duration:0.5}));
+      marquee.parentElement?.addEventListener('mouseleave', () => gsap.to(loop,{timeScale:1, duration:0.5}));
     }
 
     // Floating Chips
-    gsap.utils.toArray('.float-chip').forEach((chip, i) => {
+    gsap.utils.toArray('.float-chip').forEach((chip: any, i: number) => {
       gsap.to(chip, { y:'+=14', duration:2.6+i*0.4, ease:'sine.inOut', yoyo:true, repeat:-1 });
     });
 

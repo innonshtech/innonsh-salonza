@@ -20,7 +20,7 @@ export async function GET(req: Request) {
       .sort({ createdAt: -1 })
       .select('createdAt customerName')
       .populate('serviceIds', 'name') // We only populate name so the payload is tiny
-      .lean();
+      .lean() as any;
 
     if (!latestBooking) {
       return NextResponse.json({
