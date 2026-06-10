@@ -189,16 +189,18 @@ export default function MembershipsPage() {
     }
 
     return (
-        <div className="p-6 max-w-7xl mx-auto space-y-8">
+        <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Membership Plans</h1>
-                    <p className="text-slate-500 mt-1">Manage subscription plans and benefits for your salon</p>
+                    <h1 className="text-2xl font-semibold text-slate-900">Membership Plans</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage subscription plans and benefits for your salon
+          </p>
                 </div>
                 <button
                     onClick={() => { resetForm(); setShowModal(true); }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-all shadow-md hover:shadow-lg active:scale-95"
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-all active:scale-95"
                 >
                     <Plus className="w-5 h-5" />
                     Create New Plan
@@ -207,7 +209,7 @@ export default function MembershipsPage() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
                         <Crown className="w-6 h-6" />
                     </div>
@@ -216,7 +218,7 @@ export default function MembershipsPage() {
                         <div className="text-sm text-slate-500">Total Plans</div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
                         <Gift className="w-6 h-6" />
                     </div>
@@ -225,7 +227,7 @@ export default function MembershipsPage() {
                         <div className="text-sm text-slate-500">Active Plans</div>
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4">
+                <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
                         <Users className="w-6 h-6" />
                     </div>
@@ -238,7 +240,7 @@ export default function MembershipsPage() {
 
             {/* Content Area */}
             {plans.length === 0 ? (
-                <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-16 text-center">
+                <div className="bg-white rounded-xl border-2 border-dashed border-slate-200 p-16 text-center">
                     <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
                         <CreditCard className="w-10 h-10" />
                     </div>
@@ -259,7 +261,7 @@ export default function MembershipsPage() {
                     {plans.map((plan) => (
                         <div
                             key={plan._id}
-                            className={`group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-purple-200 transition-all overflow-hidden flex flex-col ${!plan.isActive ? 'opacity-75 grayscale-[0.5]' : ''}`}
+                            className={`group bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-purple-200 transition-all overflow-hidden flex flex-col ${!plan.isActive ? 'opacity-75 grayscale-[0.5]' : ''}`}
                         >
                             <div className="p-6 flex-1">
                                 <div className="flex justify-between items-start mb-4">
@@ -302,7 +304,7 @@ export default function MembershipsPage() {
                                             {plan.benefits && typeof plan.benefits === 'string' ? (
                                                 plan.benefits.split(',').map((benefit, idx) => (
                                                     benefit.trim() && (
-                                                        <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-100 rounded-lg text-sm text-slate-600">
+                                                        <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600">
                                                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                                             {benefit.trim()}
                                                         </div>
@@ -333,7 +335,7 @@ export default function MembershipsPage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => !isSubmitting && setShowModal(false)} />
 
-                    <div className="relative bg-white rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden border border-slate-200">
+                    <div className="relative bg-white rounded-xl w-full max-w-xl shadow-2xl overflow-hidden border border-slate-200">
                         {/* Modal Header */}
                         <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
                             <div>

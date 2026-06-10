@@ -81,9 +81,9 @@ export default function CollectionsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Daily Collection</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Daily Collection</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Analytics and earnings for {type === 'daily' ? 'today' : `the ${type} period`} at {salon?.name}
+            Analytics and earnings for {type === 'daily' ? 'today' : `the ${type} period`} at {salon?.name} for {salon?.name || "your salon"}
           </p>
         </div>
         
@@ -209,11 +209,11 @@ export default function CollectionsPage() {
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                          <div className="bg-slate-50 p-3 rounded border border-slate-100">
+                          <div className="bg-slate-50 p-3 rounded border border-slate-200">
                               <p className="text-[9px] font-bold text-slate-500 uppercase mb-1 tracking-tighter">Collection</p>
                               <p className="text-lg font-semibold text-slate-900">₹{s.totalAmount}</p>
                           </div>
-                          <div className="bg-slate-50 p-3 rounded border border-slate-100">
+                          <div className="bg-slate-50 p-3 rounded border border-slate-200">
                               <p className="text-[9px] font-bold text-slate-500 uppercase mb-1 tracking-tighter">Served</p>
                               <p className="text-lg font-semibold text-slate-900">{s.customerCount}</p>
                           </div>

@@ -41,17 +41,17 @@
 //             {/* Header */}
 //             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 //                 <div>
-//                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Supplies Marketplace</h1>
+//                     <h1 className="text-2xl font-semibold text-slate-900">Supplies Marketplace</h1>
 //                     <p className="mt-1 text-sm text-slate-600 font-medium uppercase tracking-wider">Order professional products directly from certified suppliers</p>
 //                 </div>
-//                 <button className="flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-black shadow-sm hover:bg-slate-50 transition-all active:scale-95">
+//                 <button className="flex items-center justify-center gap-2 bg-white border-2 border-slate-200 text-slate-700 px-6 py-3 rounded-xl font-black shadow-sm hover:bg-slate-50 transition-all active:scale-95">
 //                     <Truck className="w-5 h-5 text-indigo-600" />
 //                     MY ORDERS
 //                 </button>
 //             </div>
 
 //             {/* Banner */}
-//             <div className="bg-gradient-to-br from-indigo-600 top to-blue-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
+//             <div className="bg-gradient-to-br from-indigo-600 top to-blue-700 rounded-xl p-8 text-white relative overflow-hidden shadow-xl">
 //                 <div className="absolute top-0 right-0 p-8 opacity-10">
 //                     <ShoppingBag className="w-48 h-48 -rotate-12" />
 //                 </div>
@@ -61,7 +61,7 @@
 //                     </div>
 //                     <h2 className="text-4xl font-black mb-4 leading-tight">Professional Salon Equipments & Kits</h2>
 //                     <p className="text-blue-100 font-medium mb-6">Exclusive B2B pricing for registered salons. Bulk discounts available on hair care kits.</p>
-//                     <button className="bg-white text-indigo-700 px-8 py-3 rounded-2xl font-black hover:scale-105 transition-all shadow-lg flex items-center gap-2">
+//                     <button className="bg-white text-indigo-700 px-8 py-3 rounded-xl font-black hover:scale-105 transition-all shadow-lg flex items-center gap-2">
 //                         EXPLORE KITS
 //                         <ArrowRight className="w-5 h-5" />
 //                     </button>
@@ -75,10 +75,10 @@
 //                     <input
 //                         type="text"
 //                         placeholder="Search for shampoos, kits, dryers, etc..."
-//                         className="w-full pl-12 pr-4 py-4 bg-white border-2 border-slate-100 rounded-2xl focus:border-indigo-500 outline-none font-medium transition-all shadow-sm"
+//                         className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl focus:border-indigo-500 outline-none font-medium transition-all shadow-sm"
 //                     />
 //                 </div>
-//                 <button className="px-6 py-4 bg-white border-2 border-slate-100 rounded-2xl text-slate-600 font-black flex items-center gap-2 shadow-sm hover:border-slate-300">
+//                 <button className="px-6 py-4 bg-white border border-slate-200 rounded-xl text-slate-600 font-black flex items-center gap-2 shadow-sm hover:border-slate-300">
 //                     <Filter className="w-5 h-5" />
 //                     FILTERS
 //                 </button>
@@ -97,8 +97,8 @@
 //             ) : (
 //                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 //                     {products.map(p => (
-//                         <div key={p._id} className="bg-white rounded-3xl border-2 border-slate-100 p-4 shadow-sm hover:border-indigo-300 transition-all group">
-//                             <div className="aspect-square bg-slate-50 rounded-2xl mb-4 relative overflow-hidden flex items-center justify-center text-slate-300">
+//                         <div key={p._id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm hover:border-indigo-300 transition-all group">
+//                             <div className="aspect-square bg-slate-50 rounded-xl mb-4 relative overflow-hidden flex items-center justify-center text-slate-300">
 //                                 {p.image ? (
 //                                     <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
 //                                 ) : (
@@ -200,9 +200,9 @@ export default function MarketplacePage() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">Supplies Marketplace</h1>
-                <p className="mt-1 text-sm text-slate-600">
-                    Order professional products directly from certified suppliers
-                </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Order professional products directly from certified suppliers for your salon
+          </p>
             </div>
 
             {/* Banner */}

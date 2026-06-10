@@ -91,12 +91,12 @@
 //             {/* Header */}
 //             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 //                 <div>
-//                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Inventory</h1>
+//                     <h1 className="text-2xl font-semibold text-slate-900">Inventory</h1>
 //                     <p className="mt-1 text-sm text-slate-600 font-medium">Manage your products and stock levels</p>
 //                 </div>
 //                 <button
 //                     onClick={() => setShowAddModal(true)}
-//                     className="flex items-center justify-center gap-2 bg-gradient-to-br from-purple-600 to-purple-800 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-purple-200 hover:scale-105 transition-all active:scale-95"
+//                     className="flex items-center justify-center gap-2 bg-gradient-to-br from-purple-600 to-purple-800 text-white px-6 py-3 rounded-xl font-black shadow-lg shadow-purple-200 hover:scale-105 transition-all active:scale-95"
 //                 >
 //                     <Plus className="w-5 h-5" />
 //                     ADD PRODUCT
@@ -105,8 +105,8 @@
 
 //             {/* Quick Stats */}
 //             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm flex items-center gap-4">
-//                     <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+//                     <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
 //                         <Archive className="w-6 h-6 text-purple-600" />
 //                     </div>
 //                     <div>
@@ -114,8 +114,8 @@
 //                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Products</div>
 //                     </div>
 //                 </div>
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm flex items-center gap-4">
-//                     <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+//                     <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
 //                         <AlertTriangle className="w-6 h-6 text-red-600" />
 //                     </div>
 //                     <div>
@@ -125,8 +125,8 @@
 //                         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Low Stock Alerts</div>
 //                     </div>
 //                 </div>
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm flex items-center gap-4">
-//                     <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+//                     <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
 //                         <TrendingDown className="w-6 h-6 text-emerald-600" />
 //                     </div>
 //                     <div>
@@ -147,21 +147,21 @@
 //                         placeholder="Search products..."
 //                         value={searchTerm}
 //                         onChange={(e) => setSearchTerm(e.target.value)}
-//                         className="w-full pl-12 pr-4 py-3 bg-white border-2 border-slate-100 rounded-2xl focus:border-purple-500 outline-none font-medium transition-all shadow-sm"
+//                         className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium transition-all shadow-sm"
 //                     />
 //                 </div>
 //                 <div className="flex items-center gap-2">
-//                     <button className="p-3 bg-white border-2 border-slate-100 rounded-xl text-slate-600 hover:bg-slate-50 transition-all">
+//                     <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all">
 //                         <Filter className="w-5 h-5" />
 //                     </button>
-//                     <button className="p-3 bg-white border-2 border-slate-100 rounded-xl text-slate-600 hover:bg-slate-50 transition-all">
+//                     <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-all">
 //                         <ArrowUpDown className="w-5 h-5" />
 //                     </button>
 //                 </div>
 //             </div>
 
 //             {/* Table */}
-//             <div className="bg-white rounded-3xl border-2 border-slate-100 shadow-sm overflow-hidden">
+//             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 //                 <div className="overflow-x-auto">
 //                     <table className="w-full text-left">
 //                         <thead>
@@ -226,7 +226,7 @@
 //             {/* Add Product Modal */}
 //             {showAddModal && (
 //                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-//                     <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
+//                     <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-200">
 //                         <div className="bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white flex justify-between items-center">
 //                             <h3 className="text-xl font-black">Add New Product</h3>
 //                             <button onClick={() => setShowAddModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
@@ -242,7 +242,7 @@
 //                                         type="text"
 //                                         value={formData.name}
 //                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-//                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                         placeholder="e.g. Argan Oil Shampoo"
 //                                     />
 //                                 </div>
@@ -251,7 +251,7 @@
 //                                     <select
 //                                         value={formData.category}
 //                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-//                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                     >
 //                                         <option>Hair Care</option>
 //                                         <option>Skin Care</option>
@@ -264,7 +264,7 @@
 //                                     <select
 //                                         value={formData.unit}
 //                                         onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-//                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                     >
 //                                         <option>pcs</option>
 //                                         <option>ml</option>
@@ -279,7 +279,7 @@
 //                                             type="number"
 //                                             value={formData.costPrice || ''}
 //                                             onChange={(e) => setFormData({ ...formData, costPrice: Number(e.target.value) })}
-//                                             className="w-full pl-8 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                             className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                         />
 //                                     </div>
 //                                 </div>
@@ -291,7 +291,7 @@
 //                                             type="number"
 //                                             value={formData.price || ''}
 //                                             onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-//                                             className="w-full pl-8 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                             className="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                         />
 //                                     </div>
 //                                 </div>
@@ -301,7 +301,7 @@
 //                                         type="number"
 //                                         value={formData.stockCount || ''}
 //                                         onChange={(e) => setFormData({ ...formData, stockCount: Number(e.target.value) })}
-//                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                     />
 //                                 </div>
 //                                 <div>
@@ -310,7 +310,7 @@
 //                                         type="number"
 //                                         value={formData.minStockAlert || ''}
 //                                         onChange={(e) => setFormData({ ...formData, minStockAlert: Number(e.target.value) })}
-//                                         className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:border-purple-500 outline-none font-medium"
+//                                         className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-purple-500 outline-none font-medium"
 //                                     />
 //                                 </div>
 //                             </div>
@@ -318,13 +318,13 @@
 //                                 <button
 //                                     type="button"
 //                                     onClick={() => setShowAddModal(false)}
-//                                     className="flex-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 transition-all"
+//                                     className="flex-1 py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all"
 //                                 >
 //                                     Cancel
 //                                 </button>
 //                                 <button
 //                                     type="submit"
-//                                     className="flex-1 py-4 bg-purple-600 text-white font-black rounded-2xl hover:bg-purple-700 shadow-lg shadow-purple-100 transition-all"
+//                                     className="flex-1 py-4 bg-purple-600 text-white font-black rounded-xl hover:bg-purple-700 shadow-lg shadow-purple-100 transition-all"
 //                                 >
 //                                     SAVE PRODUCT
 //                                 </button>
@@ -532,9 +532,9 @@ export default function InventoryPage() {
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-semibold text-slate-900">Inventory Management</h1>
-                <p className="mt-1 text-sm text-slate-600">
-                    Manage your products and stock levels for {salon?.name || "your salon"}
-                </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage your products and stock levels for {salon?.name || "your salon"}
+          </p>
             </div>
 
             {/* Quick Stats */}

@@ -496,7 +496,7 @@ function PaymentModal({ isOpen, onClose, customer, services, onComplete }: any) 
                       value={discountValue || ''}
                       onChange={(e) => setDiscountValue(Number(e.target.value))}
                       placeholder={discountType === 'percentage' ? "0" : "0.00"}
-                      className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-lg focus:ring-1 focus:ring-purple-500 outline-none font-medium text-sm"
+                      className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-purple-500 outline-none font-medium text-sm"
                     />
                   </div>
                   <div className="text-right min-w-[70px]">
@@ -981,9 +981,9 @@ export default function QueueManagement() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-slate-900">Queue Management</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Drag and drop to manage your service queue for {salon?.name || "your salon"}
-        </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Drag and drop to manage your service queue for {salon?.name || "your salon"}
+          </p>
       </div>
 
       {/* Stats */}

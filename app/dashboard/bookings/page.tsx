@@ -198,8 +198,10 @@ export default function BookingsPage() {
     <div className="space-y-8">
       {/* Header with Stats */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Bookings</h1>
-        <p className="mt-2 text-slate-600">Manage all your customer appointments</p>
+        <h1 className="text-2xl font-semibold text-slate-900">Bookings</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage all your customer appointments for {salon?.name || "your salon"}
+          </p>
         
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">

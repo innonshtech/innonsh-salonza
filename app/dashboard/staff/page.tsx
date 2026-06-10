@@ -203,9 +203,9 @@ export default function StaffPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Staff Management</h1>
-          <p className="text-slate-600 mt-1">
-            Manage your team members and their real-time availability
+          <h1 className="text-2xl font-semibold text-slate-900">Staff Management</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage your team members and their real-time availability for {salon?.name || "your salon"}
           </p>
         </div>
 
@@ -298,12 +298,12 @@ export default function StaffPage() {
               {staff.map((member: any) => (
                 <div
                   key={member._id}
-                  className="bg-white border-2 border-slate-100 rounded-2xl p-6 hover:border-purple-200 transition-all hover:shadow-md group"
+                  className="bg-white border border-slate-200 rounded-xl p-6 hover:border-purple-200 transition-all hover:shadow-md group"
                 >
                   {/* Staff Header */}
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center shadow-lg text-white font-black text-xl">
+                      <div className="w-14 h-14 bg-purple-600 rounded-xl flex items-center justify-center shadow-lg text-white font-black text-xl">
                         {member.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -328,7 +328,7 @@ export default function StaffPage() {
 
                   {/* Staff Details */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Contact</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-slate-700">
                         <Phone className="w-3.5 h-3.5 text-slate-400" />
@@ -336,7 +336,7 @@ export default function StaffPage() {
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Expertise</p>
                       <div className="flex items-center gap-2 text-sm font-bold text-slate-700 truncate">
                         <Award className="w-3.5 h-3.5 text-slate-400" />
@@ -348,7 +348,7 @@ export default function StaffPage() {
                   </div>
 
                   {/* Status Control */}
-                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-6 transition-all group-hover:bg-white group-hover:border-purple-100">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 transition-all group-hover:bg-white group-hover:border-purple-100">
                     <p className="text-[10px] font-black text-slate-500 mb-3 uppercase tracking-widest flex items-center gap-2">
                         <CircleDot className="w-3 h-3" />
                         Manage Availability
@@ -399,11 +399,11 @@ export default function StaffPage() {
       {/* Add Staff Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden border border-slate-200">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-200">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-8 border-b border-slate-100 bg-slate-50/50">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-600 rounded-2xl shadow-lg ring-4 ring-purple-100">
+                <div className="p-3 bg-purple-600 rounded-xl shadow-lg ring-4 ring-purple-100">
                   <UserPlus className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -422,7 +422,7 @@ export default function StaffPage() {
             {/* Modal Body */}
             <div className="p-8 space-y-6">
               {error && (
-                <div className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-100 rounded-2xl text-red-700 text-xs font-bold">
+                <div className="flex items-center gap-3 p-4 bg-red-50 border-2 border-red-100 rounded-xl text-red-700 text-xs font-bold">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -439,7 +439,7 @@ export default function StaffPage() {
                       type="text"
                       placeholder="e.g. Sameer Khan"
                       value={newStaff.name}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner"
                       onChange={(e) =>
                         setNewStaff({ ...newStaff, name: e.target.value })
                       }
@@ -457,7 +457,7 @@ export default function StaffPage() {
                       type="tel"
                       placeholder="10 digit cellular number"
                       value={newStaff.phone}
-                      className={`w-full pl-12 pr-4 py-4 bg-slate-50 border-2 rounded-2xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner ${phoneError ? 'border-red-500' : 'border-slate-100'}`}
+                      className={`w-full pl-12 pr-4 py-4 bg-slate-50 border-2 rounded-xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner ${phoneError ? 'border-red-500' : 'border-slate-100'}`}
                       onChange={(e) =>
                         setNewStaff({ ...newStaff, phone: e.target.value })
                       }
@@ -478,7 +478,7 @@ export default function StaffPage() {
                       type="text"
                       placeholder="e.g. Haircut, Facial, Spa"
                       value={newStaff.skills}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 outline-none focus:border-purple-500 focus:bg-white transition-all shadow-inner"
                       onChange={(e) =>
                         setNewStaff({ ...newStaff, skills: e.target.value })
                       }
@@ -495,7 +495,7 @@ export default function StaffPage() {
             <div className="flex gap-4 p-8 bg-slate-50 border-t border-slate-100">
               <button
                 onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                className="flex-1 px-4 py-4 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
                 disabled={submitting}
               >
                 Cancel
@@ -503,7 +503,7 @@ export default function StaffPage() {
               <button
                 onClick={handleAddStaff}
                 disabled={submitting}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-4 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-xl disabled:opacity-50"
               >
                 {submitting ? (
                   <>

@@ -1,8 +1,36 @@
 @import "tailwindcss";
 @import '../styles/landing.css';
 
+@theme {
+  /* Flatten UI: Remove all shadows to match standard ERP format */
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --shadow-inner: none;
+
+  /* Normalize borders: Convert bubbly 2xl/3xl to standard xl */
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 0.75rem;
+}
+
 @layer base {
+  html {
+    font-size: 14px; /* Standard ERP scaling */
+  }
   body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased text-sm;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 }

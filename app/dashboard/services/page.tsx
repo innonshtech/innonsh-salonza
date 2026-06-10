@@ -353,10 +353,10 @@ export default function ManageServices() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Manage Services</h1>
-        <p className="mt-2 text-slate-600">
-          Add and manage services offered at {salon?.name || "your salon"}
-        </p>
+        <h1 className="text-2xl font-semibold text-slate-900">Manage Services</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Add and manage services offered at {salon?.name || "your salon"} for {salon?.name || "your salon"}
+          </p>
       </div>
 
       {/* Analytics & Activity */}
@@ -402,7 +402,7 @@ export default function ManageServices() {
               <p className="text-sm text-slate-500 py-4 text-center">No activity today</p>
             ) : (
               activityData.todaysActivity.map((item: any) => (
-                <div key={item._id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div key={item._id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <div className="flex justify-between items-start mb-1">
                     <p className="font-semibold text-slate-900 text-sm">{item.customerName}</p>
                     <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">
@@ -429,7 +429,7 @@ export default function ManageServices() {
               <p className="text-sm text-slate-500 py-4 text-center">No upcoming bookings</p>
             ) : (
               activityData.upcomingActivity.map((item: any) => (
-                <div key={item._id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div key={item._id} className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <div className="flex justify-between items-start mb-1">
                     <p className="font-semibold text-slate-900 text-sm">{item.customerName}</p>
                     <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">

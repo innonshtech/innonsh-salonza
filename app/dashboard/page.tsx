@@ -154,12 +154,12 @@ export default function DashboardHome() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-2xl font-semibold text-slate-900">
           Welcome back, {user?.name}! 👋
         </h1>
-        <p className="mt-2 text-slate-600">
-          Here's what's happening at <span className="font-semibold text-purple-600">{salon.name}</span> today
-        </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Here's what's happening at <span className="font-semibold text-purple-600">{salon.name}</span> today for {salon?.name || "your salon"}
+          </p>
       </div>
 
       {/* Stats Grid */}

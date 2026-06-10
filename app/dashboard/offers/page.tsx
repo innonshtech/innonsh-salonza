@@ -142,10 +142,10 @@ export default function ManageOffers() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Special Offers</h1>
-                    <p className="text-slate-600 mt-1">
-                        Create and manage deals to attract more customers to your salon.
-                    </p>
+                    <h1 className="text-2xl font-semibold text-slate-900">Special Offers</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Create and manage deals to attract more customers to your salon. for {salon?.name || "your salon"}
+          </p>
                 </div>
                 <button
                     onClick={() => setShowAddModal(true)}
@@ -158,8 +158,8 @@ export default function ManageOffers() {
 
             {/* Offers Grid */}
             {offers.length === 0 ? (
-                <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
-                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-12 text-center">
+                    <div className="w-16 h-16 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <Tag className="w-8 h-8 text-slate-400" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-2">No active offers</h3>
@@ -178,7 +178,7 @@ export default function ManageOffers() {
                     {offers.map((offer) => (
                         <div
                             key={offer._id}
-                            className="group bg-white rounded-2xl border border-slate-200 p-6 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 transition-all relative overflow-hidden"
+                            className="group bg-white rounded-xl border border-slate-200 p-6 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-500/5 transition-all relative overflow-hidden"
                         >
                             <div className="flex items-start justify-between mb-4">
                                 <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors">
@@ -226,7 +226,7 @@ export default function ManageOffers() {
                         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
                         onClick={() => setShowAddModal(false)}
                     />
-                    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center justify-between p-6 border-b border-slate-100">
                             <div className="flex items-center space-x-3">
                                 <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">

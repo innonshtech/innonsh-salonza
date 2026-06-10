@@ -242,8 +242,10 @@ export default function SettingsPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
-        <p className="mt-2 text-slate-600">Manage your salon settings and subscription</p>
+        <h1 className="text-2xl font-semibold text-slate-900">Settings</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Manage your salon settings and subscription for {salon?.name || "your salon"}
+          </p>
       </div>
 
       {/* Tabs */}
@@ -320,7 +322,7 @@ export default function SettingsPage() {
 
             <div className="flex flex-col md:flex-row items-start gap-8">
               <div className="relative group">
-                <div className="w-64 h-48 rounded-2xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
+                <div className="w-64 h-48 rounded-xl overflow-hidden bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center">
                   {salon.mainImage ? (
                     <img
                       src={salon.mainImage}
@@ -334,7 +336,7 @@ export default function SettingsPage() {
                     </div>
                   )}
                   {uploading && (
-                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+                    <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-xl">
                       <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
                     </div>
                   )}

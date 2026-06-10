@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -61,8 +61,11 @@ export const metadata: Metadata = {
 };
 
 // Viewport configuration (Next.js 14+)
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: "#6C4EFF",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

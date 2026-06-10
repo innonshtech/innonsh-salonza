@@ -115,14 +115,14 @@ export default function SalonSetupPage() {
       <div className="max-w-2xl w-full">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-600 rounded-2xl mb-6 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-600 rounded-xl mb-6 shadow-lg">
             <Store className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 mb-3">
+          <h1 className="text-2xl font-semibold text-slate-900">
             Welcome to TrimSetGo! 🎉
           </h1>
-          <p className="text-xl text-slate-600">
-            Let's set up your salon in just a few steps
+          <p className="mt-1 text-sm text-slate-600">
+            Let's set up your salon in just a few steps for your salon
           </p>
         </div>
 
@@ -153,7 +153,7 @@ export default function SalonSetupPage() {
         </div>
 
         {/* Main Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 md:p-10">
+        <div className="bg-white rounded-xl shadow-xl border border-slate-200 p-8 md:p-10">
           {/* Welcome Message */}
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-8">
             <div className="flex items-start space-x-3">

@@ -16,14 +16,14 @@
 //             {/* Header */}
 //             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 //                 <div>
-//                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Customer Feedback</h1>
+//                     <h1 className="text-2xl font-semibold text-slate-900">Customer Feedback</h1>
 //                     <p className="mt-1 text-sm text-slate-600 font-medium uppercase tracking-wider">Analyze customer satisfaction and reviews</p>
 //                 </div>
 //             </div>
 
 //             {/* Stats */}
 //             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
 //                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Avg. Rating</div>
 //                     <div className="flex items-center gap-2">
 //                         <div className="text-3xl font-black text-slate-900">4.8</div>
@@ -34,22 +34,22 @@
 //                     </div>
 //                 </div>
 //                 {/* ... other stats ... */}
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
 //                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Reviews</div>
 //                     <div className="text-3xl font-black text-slate-900">142</div>
 //                 </div>
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
 //                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Positive</div>
 //                     <div className="text-3xl font-black text-emerald-600">92%</div>
 //                 </div>
-//                 <div className="bg-white p-6 rounded-3xl border-2 border-slate-100 shadow-sm">
+//                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
 //                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Negative</div>
 //                     <div className="text-3xl font-black text-red-600">8%</div>
 //                 </div>
 //             </div>
 
 //             {/* Reviews List */}
-//             <div className="bg-white rounded-[40px] border-2 border-slate-100 shadow-sm overflow-hidden">
+//             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 //                 <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between gap-4">
 //                     <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
 //                         <MessageCircle className="w-5 h-5 text-indigo-600" />
@@ -58,9 +58,9 @@
 //                     <div className="flex gap-2">
 //                         <div className="relative">
 //                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-//                             <input type="text" placeholder="Search comments..." className="pl-10 pr-4 py-2 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm focus:border-indigo-500 outline-none transition-all" />
+//                             <input type="text" placeholder="Search comments..." className="pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-indigo-500 outline-none transition-all" />
 //                         </div>
-//                         <button className="p-2 border-2 border-slate-100 rounded-xl text-slate-400 hover:border-slate-300 transition-all">
+//                         <button className="p-2 border border-slate-200 rounded-xl text-slate-400 hover:border-slate-300 transition-all">
 //                             <Filter className="w-5 h-5" />
 //                         </button>
 //                     </div>
@@ -86,7 +86,7 @@
 //                             </p>
 //                             <div className="mt-4 flex gap-2">
 //                                 <span className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[8px] font-black uppercase rounded-md">Positive</span>
-//                                 <span className="px-2 py-1 bg-slate-50 text-slate-400 text-[8px] font-black uppercase rounded-md border border-slate-100">Verified Visit</span>
+//                                 <span className="px-2 py-1 bg-slate-50 text-slate-400 text-[8px] font-black uppercase rounded-md border border-slate-200">Verified Visit</span>
 //                             </div>
 //                         </div>
 //                     ))}
@@ -265,9 +265,9 @@ export default function FeedbackPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-semibold text-slate-900">Customer Feedback</h1>
-                        <p className="mt-1 text-sm text-slate-600">
-                            Analyze customer satisfaction and reviews for {salon?.name || "your salon"}
-                        </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Analyze customer satisfaction and reviews for {salon?.name || "your salon"}
+          </p>
                     </div>
                     <button
                         onClick={() => setShowFormModal(true)}

@@ -127,10 +127,10 @@ export default function ManageGallery() {
   return (
     <div className="space-y-10">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900">Manage Gallery</h1>
-        <p className="text-slate-600 mt-1">
-          Upload photos that appear in your public salon page gallery.
-        </p>
+        <h1 className="text-2xl font-semibold text-slate-900">Manage Gallery</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Upload photos that appear in your public salon page gallery. for {salon?.name || "your salon"}
+          </p>
       </div>
 
       {/* Add Image Card */}
