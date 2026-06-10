@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['pino', 'pino-pretty'],
+  serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
   async headers() {
     return [
       {
@@ -40,17 +40,8 @@ const nextConfig: NextConfig = {
 
 import { withSentryConfig } from "@sentry/nextjs";
 
-export default withSentryConfig(
-  nextConfig,
-  {
-    silent: true,
-    org: "example-org",
-    project: "example-project",
-  },
-  {
-    widenClientFileUpload: true,
-    transpileClientSDK: true,
-    hideSourceMaps: true,
-    disableLogger: true,
-  }
-);
+export default withSentryConfig(nextConfig, {
+  silent: true,
+  org: "example-org",
+  project: "example-project",
+});
