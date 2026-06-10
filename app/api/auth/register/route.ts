@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { withValidation } from "@/lib/validate";
 import { registerSchema } from "@/lib/validations";
+import { withRateLimit } from "@/lib/rateLimit";
 
-async function handler(req: Request) {
+async function handler(req: NextRequest) {
   try {
     await dbConnect();
     const { name, email, password, role } = await req.json();
@@ -32,5 +33,5 @@ async function handler(req: Request) {
   }
 }
 
-export const POST = withValidation(registerSchema, handler);
+export const POST = withRateLimit(withValidation(registerSchema, handler), 10, 60 * 60 * 1000);
 

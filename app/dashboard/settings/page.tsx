@@ -37,7 +37,9 @@ export default function SettingsPage() {
   const { showToast } = useToast();
   const [salon, setSalon] = useState<Salon | null>(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'general' | 'subscription'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'subscription' | 'sessions'>('general');
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   const paymentsEnabled = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
@@ -47,6 +49,47 @@ export default function SettingsPage() {
     const saved = localStorage.getItem("salon");
     if (saved) setSalon(JSON.parse(saved));
   }, []);
+
+  const fetchSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const res = await fetch("/api/sessions");
+      const data = await res.json();
+      if (data.success) {
+        setSessions(data.sessions);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'sessions') {
+      fetchSessions();
+    }
+  }, [activeTab]);
+
+  const handleRevokeSession = async (sessionId?: string) => {
+    if (!confirm(sessionId ? "Revoke this device?" : "Revoke all other devices?")) return;
+    try {
+      const res = await fetch("/api/sessions", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, "success");
+        fetchSessions();
+      } else {
+        showToast(data.message, "error");
+      }
+    } catch (err) {
+      showToast("Failed to revoke session", "error");
+    }
+  };
 
   async function startSubscription(type: 'basic' | 'pro') {
     if (!salon) return;
@@ -273,6 +316,18 @@ export default function SettingsPage() {
             <div className="flex items-center space-x-2">
               <CreditCard className="w-5 h-5" />
               <span>Subscription</span>
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('sessions')}
+            className={`pb-4 px-1 border-b-2 font-medium transition-colors ${activeTab === 'sessions'
+              ? 'border-purple-600 text-purple-600'
+              : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+          >
+            <div className="flex items-center space-x-2">
+              <Shield className="w-5 h-5" />
+              <span>Security</span>
             </div>
           </button>
         </nav>
@@ -589,6 +644,61 @@ export default function SettingsPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Security Tab */}
+      {activeTab === 'sessions' && (
+        <div className="space-y-6">
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Active Devices</h2>
+                <p className="text-slate-600 mt-1">Manage devices currently logged into your account.</p>
+              </div>
+              <button 
+                onClick={() => handleRevokeSession()}
+                className="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 font-semibold rounded-lg transition-colors border border-red-200"
+              >
+                Sign out of all other devices
+              </button>
+            </div>
+
+            {loadingSessions ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="w-8 h-8 animate-spin text-purple-600" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sessions.map((s: any) => (
+                  <div key={s.id} className="flex items-center justify-between p-4 border border-slate-100 bg-slate-50 rounded-xl">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                        <Globe className="w-5 h-5 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          {s.userAgent?.substring(0, 50) || "Unknown Device"} 
+                          {s.isCurrent && <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">This Device</span>}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          IP: {s.ip} • Last Active: {new Date(s.lastActive).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    {!s.isCurrent && (
+                      <button 
+                        onClick={() => handleRevokeSession(s.id)}
+                        className="text-red-600 hover:text-red-700 font-medium text-sm px-3 py-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        Revoke
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

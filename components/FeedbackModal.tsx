@@ -21,12 +21,10 @@ export default function FeedbackModal({ isOpen, onClose, customer, salonId }: an
 
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch("/api/feedback/create", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           name: customer.name,

@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import crypto from "crypto";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/User";
 import { withValidation } from "@/lib/validate";
 import { forgotPasswordSchema } from "@/lib/validations";
+import { withRateLimit } from "@/lib/rateLimit";
 
-async function handler(req: Request) {
+async function handler(req: NextRequest) {
   try {
     await dbConnect();
     const { email } = await req.json();
@@ -55,4 +56,4 @@ async function handler(req: Request) {
   }
 }
 
-export const POST = withValidation(forgotPasswordSchema, handler);
+export const POST = withRateLimit(withValidation(forgotPasswordSchema, handler), 3, 60 * 60 * 1000);
