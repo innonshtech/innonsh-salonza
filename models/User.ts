@@ -20,6 +20,8 @@ const userSchema = new mongoose.Schema({
   businessDescription: String,
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  loginAttempts: { type: Number, required: true, default: 0 },
+  lockUntil: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 

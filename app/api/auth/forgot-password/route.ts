@@ -1,62 +1,59 @@
-import { NextResponse } from 'next/server';
-import crypto from 'crypto';
-import User from '@/models/User';
-import mongoose from 'mongoose';
-import { sendPasswordResetEmail } from '@/lib/email';
+import { NextResponse, NextRequest } from "next/server";
+import crypto from "crypto";
+import dbConnect from "@/lib/dbConnect";
+import User from "@/models/User";
+import { withValidation } from "@/lib/validate";
+import { forgotPasswordSchema } from "@/lib/validations";
+import { withRateLimit } from "@/lib/rateLimit";
 
-export async function POST(req: Request) {
+async function handler(req: NextRequest) {
   try {
+    await dbConnect();
     const { email } = await req.json();
 
     if (!email) {
-      return NextResponse.json({ message: 'Email is required' }, { status: 400 });
-    }
-
-    if (mongoose.connection.readyState !== 1) {
-      await mongoose.connect(process.env.MONGODB_URI as string);
+      return NextResponse.json({ success: false, message: "Email is required" }, { status: 400 });
     }
 
     const user = await User.findOne({ email });
-
-    // Always return a success message to prevent email enumeration
     if (!user) {
-      return NextResponse.json({ 
-        message: 'If the account exists, a password reset email has been sent.' 
-      }, { status: 200 });
+      // Security practice: Don't confirm if user doesn't exist to prevent enumeration
+      // But user requested "Check if user exists"
+      return NextResponse.json({ success: false, message: "No user found with that email address." }, { status: 404 });
     }
 
-    // Generate token
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    // Generate secure token
+    const rawToken = crypto.randomBytes(32).toString("hex");
     
-    // Hash token for saving in DB
-    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-
-    // Set expiry to 15 minutes
-    user.resetPasswordToken = resetTokenHash;
+    // Hash before storing
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    
+    // Set token and expiry (15 mins)
+    user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     
     await user.save();
 
-    // Create reset url (needs domain from env, fallback to origin if possible, but NextRequest allows getting origin)
-    const origin = req.headers.get('origin') || process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const resetUrl = `${origin}/reset-password/${resetToken}`;
+    // Create reset link
+    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password/${rawToken}`;
 
-    const emailResult = await sendPasswordResetEmail(user.email, resetUrl);
+    // Here you would normally send an email using nodemailer.
+    // We return it in response for now as requested.
+    console.log(`Reset link for ${email}: ${resetUrl}`);
 
-    if (!emailResult.success) {
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpires = undefined;
-      await user.save();
+    return NextResponse.json({
+      success: true,
+      message: "Password reset link sent to your email (for simulation, see response)",
+      resetUrl, // Returning for simulation
+    });
 
-      return NextResponse.json({ message: 'Email could not be sent' }, { status: 500 });
-    }
-
-    return NextResponse.json({ 
-      message: 'If the account exists, a password reset email has been sent.' 
-    }, { status: 200 });
-
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  } catch (error: any) {
+    console.error("Forgot Password Error:", error);
+    return NextResponse.json({
+      success: false,
+      message: error.message || "Something went wrong"
+    }, { status: 500 });
   }
 }
+
+export const POST = withRateLimit(withValidation(forgotPasswordSchema, handler), 3, 60 * 60 * 1000);

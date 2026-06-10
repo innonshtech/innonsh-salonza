@@ -1,19 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { sanitizePayload } from "./sanitize";
 
 /**
  * Middleware wrapper to validate incoming JSON requests against a Zod schema.
- * Rejects with 400 Bad Request if validation fails.
+ * Sanitizes input (NoSQL/XSS protection) before validation.
  */
 export function withValidation(schema: z.ZodTypeAny, handler: Function) {
   return async (req: Request, ...args: any[]) => {
     try {
-      // Clone request so the underlying handler can still call req.json() if it wants to
-      const clonedReq = req.clone();
-      
       let body;
       try {
-        body = await clonedReq.json();
+        body = await req.json();
       } catch (parseError) {
         return NextResponse.json(
           { success: false, message: "Invalid JSON format" },
@@ -21,11 +19,14 @@ export function withValidation(schema: z.ZodTypeAny, handler: Function) {
         );
       }
       
-      const result = schema.safeParse(body);
+      // Sanitization Layer
+      const sanitizedBody = sanitizePayload(body);
+      
+      // Validation Layer
+      const result = schema.safeParse(sanitizedBody);
       
       if (!result.success) {
         const zodError: any = result.error;
-        console.warn("Zod Validation Failed:", zodError.errors);
         const errors = zodError.errors.map((err: any) => ({
           field: err.path.join('.'),
           message: err.message
@@ -37,6 +38,9 @@ export function withValidation(schema: z.ZodTypeAny, handler: Function) {
           errors
         }, { status: 400 });
       }
+
+      // Intercept req.json() so handlers get the sanitized & validated payload
+      req.json = async () => sanitizedBody;
 
       return handler(req, ...args);
     } catch (error: any) {
