@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill //PID 22152 //F)",
+      "Bash(npm run:*)",
+      "Bash(curl -v http://localhost:3000/api/salon/services/list)",
+      "Bash(node:*)",
+      "Bash(npm list:*)",
+      "Bash(curl:*)",
+      "Bash(find /c/Users/lokha/.claude/projects/E--Xpertance-salon-mngmt-Salon-Mng-System -name .env* -o -name *.env)",
+      "Bash(grep -n \"alert\\(\" app/dashboard/*/page.tsx)",
+      "Bash(find app/api -name *stats* -type f)"
+    ]
+  }
+}

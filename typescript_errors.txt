@@ -1,0 +1,16 @@
+﻿app/api/public/salon/[slug]/route.ts(22,58): error TS2339: Property '_id' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[] | (FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })'.
+  Property '_id' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[]'.
+app/api/public/salon/[slug]/route.ts(23,66): error TS2339: Property '_id' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[] | (FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })'.
+  Property '_id' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[]'.
+app/api/public/salon/[slug]/route.ts(24,54): error TS2339: Property '_id' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[] | (FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })'.
+  Property '_id' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[]'.
+app/api/public/salon/[slug]/route.ts(34,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/gallery/add/route.ts(21,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/gallery/list/route.ts(30,22): error TS2339: Property 'gallery' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[] | (FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })'.
+  Property 'gallery' does not exist on type '(FlattenMaps<any> & Required<{ _id: unknown; }> & { __v: number; })[]'.
+app/api/salon/offer/add/route.ts(19,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/testimonial/add/route.ts(19,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/update-hours/route.ts(23,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/update-profile/route.ts(19,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/update-socials/route.ts(23,55): error TS18046: 'err' is of type 'unknown'.
+app/api/salon/update/route.ts(16,27): error TS7006: Parameter 'req' implicitly has an 'any' type.

@@ -1,0 +1,1 @@
+- [Booking Status Fix (2026-04-07)](booking-status-fix-2026-04-07.md) — Fixed booking lifecycle: upcoming → in-progress → completed

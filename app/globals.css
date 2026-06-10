@@ -1,0 +1,8 @@
+@import "tailwindcss";
+@import '../styles/landing.css';
+
+@layer base {
+  body {
+    @apply font-sans antialiased;
+  }
+}
