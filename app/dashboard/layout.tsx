@@ -56,6 +56,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     async function check() {
+      if (!user) return; // Do not process redirects if the user is logged out or logging out
+      
       // Load salon from localStorage
       const saved = localStorage.getItem("salon");
       if (saved) {
@@ -128,9 +130,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Settings", href: "/dashboard/settings", icon: Settings }
   ];
 
-  const handleLogout = () => {
-    logout();
-    router.push("/");
+  const handleLogout = async () => {
+    await logout();
   };
 
   if (!allowed) {
