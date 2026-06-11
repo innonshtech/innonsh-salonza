@@ -21,7 +21,7 @@ export function withAuth(handler: Function, allowedRoles?: string[]) {
 
       try {
         const cookieStore = await cookies();
-        const cookie = cookieStore.get("token");
+        const cookie = cookieStore.get("authToken") || cookieStore.get("token");
         token = cookie?.value ?? undefined;
       } catch (cookieError) {
         console.warn("Failed to read cookies:", cookieError);
@@ -36,6 +36,7 @@ export function withAuth(handler: Function, allowedRoles?: string[]) {
       }
 
       if (!token) {
+        console.warn("apiAuth: No token found in cookies (authToken/token) or headers.");
         return NextResponse.json(
           { success: false, message: "Unauthorized: No token provided" },
           { status: 401 }
@@ -55,6 +56,7 @@ export function withAuth(handler: Function, allowedRoles?: string[]) {
       try {
         decoded = jwt.verify(token, JWT_SECRET) as any;
       } catch (verifyError: any) {
+        console.warn("apiAuth: JWT Verification failed:", verifyError.message);
         const status = verifyError.name === "TokenExpiredError" ? 401 : 403;
         const message = verifyError.name === "TokenExpiredError"
           ? "Token expired. Please log in again."
