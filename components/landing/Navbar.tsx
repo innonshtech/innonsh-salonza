@@ -38,7 +38,7 @@ export default function Navbar() {
           </ul>
           <div className="nav-cta">
             <a href="/login" className="signin">Sign in</a>
-            <a href="/contact" className="btn btn-primary" data-magnetic>Contact Sales</a>
+            <a href="#cta" className="btn btn-primary" data-magnetic>Contact Sales</a>
             <button className={`menu-btn ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)} aria-label="Open menu"><span></span><span></span><span></span></button>
           </div>
         </div>
@@ -50,7 +50,7 @@ export default function Navbar() {
         <a href="#roles">Roles</a>
         <a href="#impact">Results</a>
         <a href="#how">How it works</a>
-        <a href="/contact" className="btn btn-primary">Contact Sales</a>
+        <a href="#cta" className="btn btn-primary">Contact Sales</a>
       </aside>
     </>
   );

@@ -121,7 +121,7 @@
     position:relative;overflow:hidden;
   }
   .logo-mark svg{width:20px;height:20px}
-  .nav-links{display:flex;align-items:center;gap:38px}
+  .nav-links{display:flex;align-items:center;gap:clamp(16px, 2.5vw, 38px)}
   .nav-links a{font-size:15px;font-weight:500;color:var(--muted);transition:color .25s ease}
   .nav-links a:hover{color:var(--ink)}
   .nav-cta{display:flex;align-items:center;gap:14px}
@@ -557,6 +557,102 @@
   .ready [data-anim]{opacity:1;transform:none}
 
   /* ---------- Responsive ---------- */
+  @media (max-width: 1440px) {
+    .hero {
+      padding: 100px 0 45px;
+    }
+    .hero-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+    .hero-copy {
+      max-width: 100%;
+    }
+    .hero h1 {
+      margin: 12px 0 0;
+    }
+    .h-display {
+      font-size: clamp(34px, 3.6vw, 48px);
+    }
+    .hero .lead {
+      margin-top: 12px;
+      font-size: clamp(15px, 1.3vw, 16px);
+      max-width: 480px;
+    }
+    .hero-actions {
+      margin-top: 20px;
+      gap: 12px;
+    }
+    .hero-actions .btn {
+      padding: 12px 22px;
+      font-size: 14.5px;
+    }
+    .hero-trust {
+      margin-top: 24px;
+    }
+    .avatars span {
+      width: 32px;
+      height: 32px;
+    }
+    .hero-visual {
+      height: 420px;
+    }
+    .dashboard {
+      max-width: 440px;
+      padding: 14px;
+    }
+    .db-grid {
+      gap: 10px;
+    }
+    .db-card {
+      padding: 10px 12px;
+    }
+    .db-card .num {
+      font-size: 20px;
+      margin-top: 4px;
+    }
+    .db-card .lbl {
+      font-size: 11px;
+    }
+    .db-bars {
+      height: 45px;
+      margin-top: 8px;
+    }
+    .float-chip {
+      padding: 8px 12px;
+      font-size: 11.5px;
+      border-radius: 12px;
+    }
+    .float-chip .ci {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+    }
+    .float-chip .ci svg {
+      width: 12px;
+      height: 12px;
+    }
+    .chip-1 {
+      left: -2%;
+      top: 4%;
+    }
+    .chip-2 {
+      right: -2%;
+      bottom: 8%;
+    }
+    .chip-3 {
+      left: -3%;
+      bottom: 34%;
+    }
+    .cta-split {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 40px;
+    }
+    .cta-box {
+      padding: 40px;
+    }
+  }
+
   @media (max-width:1024px){
     .pad{padding:110px 0}
     .hero-grid,.sol-grid{grid-template-columns:1fr;gap:50px}
