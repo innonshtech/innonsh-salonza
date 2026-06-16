@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Footer() {
   return (
     <footer>
@@ -48,8 +50,8 @@ export default function Footer() {
         <div className="foot-bottom">
           <p>© 2026 Innonsh Salonza. The operating system for modern salons.</p>
           <div className="links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
             <a href="#">Security</a>
           </div>
         </div>
