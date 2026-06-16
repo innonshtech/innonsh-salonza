@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Service from "@/models/Service";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
-    
     // IDOR Protection: Always use salonId from JWT for owners
     const salonId = decoded.salonId;
     if (!salonId && decoded.role !== "super_admin") {
@@ -20,7 +17,7 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "salonId is required" }, { status: 400 });
     }
 
-    const services = await Service.find({ salonId: targetSalonId });
+    const services = await ServiceRepository.find({ salonId: targetSalonId });
     return NextResponse.json({ success: true, services });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

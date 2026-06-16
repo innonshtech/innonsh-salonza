@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Sale from "@/models/Sale";
-import Staff from "@/models/Staff";
+import { SaleRepository } from "@/repositories/SaleRepository";
+import { StaffRepository } from "@/repositories/StaffRepository";
 
 export async function GET(req: Request) {
     try {
-        await dbConnect();
         const { searchParams } = new URL(req.url);
         const salonId = searchParams.get("salonId");
 
         if (!salonId) {
             return NextResponse.json({ success: false, message: "Salon ID required" });
         }
-
-        const mongoose = require('mongoose');
-        const sObjectId = new mongoose.Types.ObjectId(salonId);
 
         // Get today's date range (start and end of day)
         const now = new Date();
@@ -23,10 +18,10 @@ export async function GET(req: Request) {
         tomorrow.setDate(today.getDate() + 1);
 
         // Fetch sales for today
-        const rawSales = await Sale.find({
-            salonId: sObjectId,
+        const rawSales = await SaleRepository.find({
+            salonId,
             date: { $gte: today, $lt: tomorrow }
-        }).populate("serviceId", "name price").lean();
+        });
 
         console.log(`[Analytics Debug] Salon: ${salonId}, Range: ${today.toISOString()} - ${tomorrow.toISOString()}`);
         console.log(`[Analytics Debug] Found ${rawSales.length} records.`);
@@ -45,7 +40,7 @@ export async function GET(req: Request) {
                 return {
                     ...sale,
                     serviceNames: [sale.serviceId?.name || "Unknown"],
-                    totalPrice: sale.price,
+                    totalPrice: sale.totalAmount, // Map totalPrice to totalAmount or finalAmount
                     count: 1
                 };
             }
@@ -55,16 +50,16 @@ export async function GET(req: Request) {
         // For new records, they are already consolidated.
         const finalSalesMap: any = {};
         normalizedSales.forEach((sale: any) => {
-            // Use _id if available (new records), or a composite key for old records
-            const key = sale.services ? sale._id.toString() : `${sale.customerName}-${sale.staffId || "unassigned"}`;
+            // Use id if available, or a composite key for old records
+            const key = sale.services && sale.services.length > 0 ? sale.id.toString() : `${sale.customerName}-${sale.staffId || "unassigned"}`;
 
             if (!finalSalesMap[key]) {
                 finalSalesMap[key] = { ...sale };
-                if (!sale.services) {
+                if (!(sale.services && sale.services.length > 0)) {
                     finalSalesMap[key].count = 1;
                     finalSalesMap[key].serviceNames = [...sale.serviceNames];
                 }
-            } else if (!sale.services) {
+            } else if (!(sale.services && sale.services.length > 0)) {
                 // Only group if it's an old record type
                 finalSalesMap[key].serviceNames.push(...sale.serviceNames);
                 finalSalesMap[key].totalPrice += sale.totalPrice;
@@ -74,9 +69,9 @@ export async function GET(req: Request) {
         const groupedSales = Object.values(finalSalesMap);
 
         // Fetch staff for names
-        const staff = await Staff.find({ salonId }).lean();
+        const staff = await StaffRepository.find({ salonId });
         const staffMap = staff.reduce((acc: any, s: any) => {
-            acc[s._id.toString()] = s.name;
+            acc[s.id.toString()] = s.name;
             return acc;
         }, {});
 
@@ -85,7 +80,7 @@ export async function GET(req: Request) {
 
         // Initialize aggregation with all staff
         staff.forEach((s: any) => {
-            aggregation[s._id.toString()] = {
+            aggregation[s.id.toString()] = {
                 staffName: s.name,
                 totalAmount: 0,
                 customerCount: 0,
@@ -110,7 +105,7 @@ export async function GET(req: Request) {
                     sales: []
                 };
             }
-            aggregation[sId].totalAmount += sale.totalPrice;
+            aggregation[sId].totalAmount += (sale.totalPrice || 0);
             aggregation[sId].customerCount += 1;
             aggregation[sId].sales.push(sale);
         });

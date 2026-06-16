@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Service from "@/models/Service";
-import Booking from "@/models/Booking";
+import { supabase } from "@/lib/supabase";
+import { BookingRepository } from "@/repositories/BookingRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
-        
         const salonId = decoded.salonId;
         if (!salonId) {
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });
@@ -18,41 +15,37 @@ async function handler(req: Request, decoded: any) {
         const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
         // 1. Active / Inactive Counts
-        const activeCount = await Service.countDocuments({
-            salonId,
-            isActive: { $ne: false }
-        });
+        const { count: activeCount } = await supabase
+            .from("services")
+            .select("*", { count: "exact", head: true })
+            .eq("salon_id", salonId)
+            .eq("is_active", true);
 
-        const inactiveCount = await Service.countDocuments({
-            salonId,
-            isActive: false
-        });
+        const { count: inactiveCount } = await supabase
+            .from("services")
+            .select("*", { count: "exact", head: true })
+            .eq("salon_id", salonId)
+            .eq("is_active", false);
 
         // 2. Today's Activity
-        const todaysActivity = await Booking.find({
+        const todaysBookings = await BookingRepository.find({
             salonId,
             date: { $gte: startOfDay, $lte: endOfDay }
-        })
-        .populate("serviceIds")
-        .sort({ date: 1 })
-        .limit(5)
-        .lean();
+        });
+        const todaysActivity = todaysBookings.slice(0, 5);
 
         // 3. Upcoming Activity
-        const upcomingActivity = await Booking.find({
+        const upcomingBookings = await BookingRepository.find({
             salonId,
-            date: { $gt: endOfDay }
-        })
-        .populate("serviceIds")
-        .sort({ date: 1 })
-        .limit(5)
-        .lean();
+            date: { $gte: new Date(endOfDay.getTime() + 1) }
+        });
+        const upcomingActivity = upcomingBookings.slice(0, 5);
 
         return NextResponse.json({
             success: true,
             counts: {
-                active: activeCount,
-                inactive: inactiveCount
+                active: activeCount || 0,
+                inactive: inactiveCount || 0
             },
             todaysActivity,
             upcomingActivity

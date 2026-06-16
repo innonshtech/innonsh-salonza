@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Membership from "@/models/Membership";
+import { MembershipRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const body = await req.json();
     console.log("Create Membership Request:", body);
 
-    const { name, price, validity, discount, benefits, isActive } = body;
+    const { name, price, validity, discount, benefits } = body;
 
     // Attach salonId from JWT (decoded)
     const salonId = decoded.salonId;
@@ -22,14 +20,13 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "Plan name is required" }, { status: 400 });
     }
 
-    const membership = await Membership.create({
+    const membership = await MembershipRepository.create({
       salonId,
       name: name.trim(),
       price: Number(price) || 0,
       validity: Number(validity) || 365,
       discount: Number(discount) || 0,
-      benefits: String(benefits || ""),
-      isActive: isActive !== undefined ? isActive : true
+      benefits: String(benefits || "")
     });
 
     console.log("Created Membership:", membership);

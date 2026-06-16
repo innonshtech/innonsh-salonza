@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Staff from "@/models/Staff";
+import { StaffRepository } from "@/repositories/StaffRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const body = await req.json();
     const { staffId } = body;
 
@@ -17,7 +15,7 @@ async function handler(req: Request, decoded: any) {
     }
 
     // Find staff member
-    const staffMember = await Staff.findById(staffId);
+    const staffMember = await StaffRepository.findById(staffId);
     if (!staffMember) {
       return NextResponse.json({ success: false, message: "Staff member not found" }, { status: 404 });
     }
@@ -28,7 +26,7 @@ async function handler(req: Request, decoded: any) {
     }
 
     // Hard delete
-    const deletedStaff = await Staff.findByIdAndDelete(staffId);
+    const deletedStaff = await StaffRepository.delete(staffId);
 
     return NextResponse.json({
       success: true,

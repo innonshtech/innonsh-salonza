@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Product from "@/models/Product";
+import { InventoryRepository } from "@/repositories/InventoryRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
-
     // IDOR Protection: Always use salonId from JWT for owners
     const salonId = decoded.salonId;
     if (!salonId && decoded.role !== "super_admin") {
@@ -24,8 +21,8 @@ async function handler(req: Request, decoded: any) {
     }
 
     // Verify ownership before updating
-    const product = await Product.findOne({ _id: id, salonId: targetSalonId });
-    if (!product) {
+    const product = await InventoryRepository.findById(id);
+    if (!product || product.salonId !== targetSalonId) {
       return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
     }
 
@@ -39,11 +36,7 @@ async function handler(req: Request, decoded: any) {
     if (minStockAlert !== undefined) updateData.minStockAlert = minStockAlert;
     if (unit !== undefined) updateData.unit = unit;
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      { $set: updateData },
-      { new: true }
-    );
+    const updatedProduct = await InventoryRepository.update(id, updateData);
 
     return NextResponse.json({ success: true, product: updatedProduct });
   } catch (error: any) {

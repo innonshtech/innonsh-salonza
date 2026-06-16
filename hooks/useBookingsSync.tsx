@@ -2,47 +2,40 @@
 
 import { useEffect, useRef } from "react";
 import { useToast } from "@/components/ui/Toast";
+import { supabaseAnon } from "@/lib/supabase";
 
 export function useBookingsSync(salonId: string | undefined | null) {
-  const lastTimestampRef = useRef<string | null>(null);
   const isInitialLoadRef = useRef(true);
   const { showToast } = useToast();
 
   useEffect(() => {
-    if (!salonId) return;
+    if (!salonId || !supabaseAnon) return;
 
-    // Load last known timestamp from sessionStorage so it persists across soft navigation
-    if (isInitialLoadRef.current && typeof window !== "undefined") {
-      const stored = sessionStorage.getItem(`lastBookingTs_${salonId}`);
-      if (stored) lastTimestampRef.current = stored;
-    }
+    console.log(`[Realtime Sync] Subscribing to bookings for salon: ${salonId}`);
 
-    const checkLatestBooking = async () => {
-      try {
-        const res = await fetch(`/api/bookings/latest?salonId=${salonId}`);
-        if (!res.ok) return;
+    // Set up native Supabase Realtime listener
+    const channel = supabaseAnon
+      .channel(`bookings_sync_${salonId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `salon_id=eq.${salonId}`
+        },
+        (payload: any) => {
+          console.log("[Realtime Sync] Booking change detected:", payload);
 
-        const data = await res.json();
-        
-        if (data.success && data.latestTimestamp) {
-          const currentLatest = data.latestTimestamp;
-          
-          // If we have a new timestamp
-          if (lastTimestampRef.current && lastTimestampRef.current !== currentLatest && !isInitialLoadRef.current) {
-            
-            // 1. Show Notification
-            const msg = data.customerName 
-              ? `New Booking: ${data.customerName} booked ${data.serviceName}`
-              : "A new booking has been made.";
-            
+          if (payload.eventType === "INSERT") {
+            const newBooking = payload.new;
+            const customerName = newBooking.customer_name || "A client";
+
+            // 1. Show toast notification
+            const msg = `New Booking: ${customerName} booked an appointment`;
             showToast(msg, "success");
 
-            // 2. Trigger global data refresh events globally
-            window.dispatchEvent(new Event("refreshDashboardStats"));
-            window.dispatchEvent(new Event("refreshBookings"));
-            window.dispatchEvent(new Event("refreshQueue"));
-            
-            // 3. Dispatch to notification panel
+            // 2. Dispatch custom event to notification panel
             window.dispatchEvent(new CustomEvent("newBookingNotification", {
               detail: {
                 message: msg,
@@ -51,26 +44,17 @@ export function useBookingsSync(salonId: string | undefined | null) {
             }));
           }
 
-          // Update ref and storage
-          lastTimestampRef.current = currentLatest;
-          sessionStorage.setItem(`lastBookingTs_${salonId}`, currentLatest);
+          // 3. Trigger global data refresh events in UI dashboard, bookings lists, and queue screens
+          window.dispatchEvent(new Event("refreshDashboardStats"));
+          window.dispatchEvent(new Event("refreshBookings"));
+          window.dispatchEvent(new Event("refreshQueue"));
         }
-      } catch (error) {
-        // Silent fail on network error, will retry next interval
-        console.error("Booking sync polling failed:", error);
-      } finally {
-        if (isInitialLoadRef.current) {
-          isInitialLoadRef.current = false;
-        }
-      }
-    };
+      )
+      .subscribe((status: string) => {
+        console.log(`[Realtime Sync] Subscription status: ${status}`);
+      });
 
-    // Layer 1: Detect newly created bookings instantly (every 30 seconds)
-    // Run immediately once
-    checkLatestBooking();
-    const quickPollInterval = setInterval(checkLatestBooking, 30000);
-
-    // Layer 2: Failsafe deep refresh of all dashboard data (every 2 minutes)
+    // Failsafe deep refresh of all dashboard data (every 2 minutes)
     const deepRefreshInterval = setInterval(() => {
       window.dispatchEvent(new Event("refreshDashboardStats"));
       window.dispatchEvent(new Event("refreshBookings"));
@@ -78,7 +62,7 @@ export function useBookingsSync(salonId: string | undefined | null) {
     }, 120000);
 
     return () => {
-      clearInterval(quickPollInterval);
+      supabaseAnon.removeChannel(channel);
       clearInterval(deepRefreshInterval);
     };
   }, [salonId]);

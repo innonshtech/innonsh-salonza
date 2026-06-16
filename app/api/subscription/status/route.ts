@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Subscription from "@/models/Subscription";
+import { SubscriptionRepository } from "@/repositories/SupportRepositories";
 
 export async function GET(req: Request) {
-  await dbConnect();
-
   const { searchParams } = new URL(req.url);
   const salonId = searchParams.get("salonId");
 
@@ -21,7 +18,7 @@ export async function GET(req: Request) {
   }
 
   // Payments enabled - check real subscription status
-  const sub = await Subscription.findOne({ salonId });
+  const sub = await SubscriptionRepository.findOne({ salonId: salonId || undefined });
   console.log("Fetched subscription for salonId", salonId, ":", sub);
 
   return NextResponse.json({

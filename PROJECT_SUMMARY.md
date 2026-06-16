@@ -63,18 +63,6 @@ Digitize salon operations and eliminate manual booking/queue overhead while crea
 - Full CRUD: Services, Staff, Bookings, Queue, Clients, Inventory, Offers, Gallery, Testimonials, Marketplace Products
 
 ### 💾 Database Integration
-- **MongoDB** via **Mongoose** (ODM)
-- Models: `User`, `Salon`, `Booking`, `Queue`, `Staff`, `Service`, `Client`, `Inventory/Product`, `Offer`, `Feedback`, `Membership`, `Campaign`, `Sale`, `Subscription`, `SupplierOrder`, `SupplierSubscription`, `MarketplaceProduct`, `Testimonial`, `Contact`
-
-### ⚙️ Business Logic / Workflows
-- Subdomain middleware rewrites requests to dynamic `[salon]` route for public pages
-- Queue reordering via `@dnd-kit` drag-and-drop with position re-indexing
-- Multi-service booking with cumulative `totalDuration` and `totalPrice` calculations
-- Supplier onboarding flow: `unapplied → pending → verified/rejected` (super-admin controlled)
-- Subscription gating: salon features accessible only with active Razorpay subscription plan
-
-### ⚡ Dynamic / Real-time Features
-- Live queue status (`waiting` / `serving`) with estimated wait time
 - Dashboard stat cards auto-refresh on page load (today's bookings, active queue, revenue)
 - Staff availability tracking: `available`, `busy`, `break`, `offline`
 

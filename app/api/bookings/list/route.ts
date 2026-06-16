@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Booking from "@/models/Booking";
+import { BookingRepository } from "@/repositories/BookingRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function getHandler(req: Request, decoded: any) {
   try {
-    await dbConnect();
-
     // IDOR Protection: Ignore the 'id' param and use 'salonId' from JWT
     if (!decoded.salonId) {
       return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
@@ -27,10 +24,7 @@ async function getHandler(req: Request, decoded: any) {
       query.status = { $in: statuses };
     }
 
-    const bookings = await Booking.find(query)
-      .populate("serviceIds")
-      .populate("serviceId") // For backward compatibility
-      .sort({ date: 1 });
+    const bookings = await BookingRepository.find(query);
 
     // Transform bookings to have consistent serviceName/s structure
     const transformedBookings = bookings.map((booking: any) => {

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
-import User from "@/models/User";
+import { SalonRepository } from "@/repositories/SalonRepository";
+import { UserRepository } from "@/repositories/UserRepository";
 import { withAuth } from "@/lib/apiAuth";
 import { withValidation } from "@/lib/validate";
 import { salonCreateSchema } from "@/lib/validations";
@@ -12,8 +11,7 @@ function generateSlug(name: string) {
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
-    const { name, address, phone } = await req.json();
+    const { name, address, phone, email } = await req.json();
 
     // IDOR Protection: Always use userId from JWT as ownerId
     const ownerId = decoded.userId || decoded.id;
@@ -23,21 +21,26 @@ async function handler(req: Request, decoded: any) {
     }
 
     let slug = generateSlug(name);
-    const slugExists = await Salon.findOne({ slug });
+    const slugExists = await SalonRepository.findOne({ slug });
     if (slugExists) {
       slug = slug + Math.floor(Math.random() * 1000); // make unique
     }
 
-    const salon = await Salon.create({
+    const salon = await SalonRepository.create({
       ownerId,
       name,
       address,
       phone,
+      email,
       slug,
     });
 
-    await User.findByIdAndUpdate(ownerId, {
-      salonId: salon._id,
+    if (!salon) {
+      return NextResponse.json({ success: false, message: "Failed to create salon" }, { status: 500 });
+    }
+
+    await UserRepository.update(ownerId, {
+      salon_id: salon.id,
     });
 
     return NextResponse.json({

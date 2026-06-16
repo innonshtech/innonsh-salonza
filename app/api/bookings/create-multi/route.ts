@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
-import Service from "@/models/Service";
-import Booking from "@/models/Booking";
-import Queue from "@/models/Queue";
+import { SalonRepository } from "@/repositories/SalonRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
+import { BookingRepository } from "@/repositories/BookingRepository";
+import { QueueRepository } from "@/repositories/QueueRepository";
 
 export async function POST(req: Request) {
   try {
-    await dbConnect();
-
     const body = await req.json();
     const { salonSlug, customerName, customerPhone, serviceIds, date } = body;
 
@@ -21,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     // 1. Find the salon
-    const salon = await Salon.findOne({ slug: salonSlug });
+    const salon = await SalonRepository.findOne({ slug: salonSlug });
     if (!salon) {
       return NextResponse.json({
         success: false,
@@ -30,7 +27,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Fetch all selected services
-    const services = await Service.find({ _id: { $in: serviceIds } });
+    const services = await ServiceRepository.find({ _id: { $in: serviceIds } });
 
     if (services.length === 0) {
       return NextResponse.json({
@@ -40,14 +37,14 @@ export async function POST(req: Request) {
     }
 
     // 3. Calculate total duration & price
-    const totalDuration = services.reduce((sum, s) => sum + Number(s.duration || 0), 0);
-    console.log("Adding to Queue - Fetched Services:", services.map(s => ({ name: s.name, duration: s.duration })));
+    const totalDuration = services.reduce((sum: number, s: any) => sum + Number(s.duration || 0), 0);
+    console.log("Adding to Queue - Fetched Services:", services.map((s: any) => ({ name: s.name, duration: s.duration })));
     console.log("Total Calculated Duration:", totalDuration);
-    const totalPrice = services.reduce((sum, s) => sum + Number(s.price || 0), 0);
+    const totalPrice = services.reduce((sum: number, s: any) => sum + Number(s.price || 0), 0);
 
     // 4. Create booking in DB
-    const booking = await Booking.create({
-      salonId: salon._id,
+    const booking = await BookingRepository.create({
+      salonId: salon.id,
       customerName,
       customerPhone,
       serviceIds,
@@ -59,30 +56,37 @@ export async function POST(req: Request) {
       status: "upcoming",
     });
 
+    if (!booking) {
+      return NextResponse.json({
+        success: false,
+        message: "Failed to create booking",
+      }, { status: 500 });
+    }
+
     // 5. Determine queue position
-    const lastQueueItem = await Queue.findOne({ salonId: salon._id })
-      .sort({ position: -1 })
-      .limit(1);
+    const lastQueueItem = await QueueRepository.findOne({
+      salonId: salon.id,
+      sort: { position: -1 }
+    });
 
     const nextPosition = lastQueueItem ? lastQueueItem.position + 1 : 1;
 
     // 6. Add to queue
-    await Queue.create({
-      salonId: salon._id,
+    await QueueRepository.create({
+      salonId: salon.id,
       customerName,
       serviceIds,
-      services: services.map(s => ({ name: s.name, duration: s.duration })),
       position: nextPosition,
       estimatedMinutes: totalDuration,
       scheduledAt: new Date(date),
       isWalkIn: false,
-      bookingId: booking._id,
+      bookingId: booking.id,
     });
 
     return NextResponse.json({
       success: true,
       message: "Booking successful",
-      bookingId: booking._id,
+      bookingId: booking.id,
       queuePosition: nextPosition,
       totalDuration,
       totalPrice,

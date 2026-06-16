@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken, verifyToken } from "@/lib/auth";
-import dbConnect from "@/lib/dbConnect";
-import User from "@/models/User";
-import { BlacklistedToken } from "@/models/BlacklistedToken";
+import { UserRepository } from "@/repositories/UserRepository";
+import { BlacklistedTokenRepository } from "@/repositories/SupportRepositories";
 import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
   try {
-    await dbConnect();
     const cookieStore = await cookies();
     const refreshToken = cookieStore.get("refreshToken")?.value;
 
@@ -16,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if token is blacklisted
-    const isBlacklisted = await BlacklistedToken.findOne({ token: refreshToken });
+    const isBlacklisted = await BlacklistedTokenRepository.findOne({ token: refreshToken });
     if (isBlacklisted) {
       return NextResponse.json({ success: false, message: "Token has been revoked" }, { status: 403 });
     }
@@ -28,17 +26,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Ensure user still exists
-    const user = await User.findById(decoded.userId);
+    const user = await UserRepository.findById(decoded.userId);
     if (!user) {
       return NextResponse.json({ success: false, message: "User no longer exists" }, { status: 404 });
     }
 
     // Generate new access token
     const newAccessToken = generateToken({
-      userId: user._id,
+      userId: user.id,
       role: user.role,
       salonId: user.salonId,
-      supplierId: user.supplierId,
+      supplierId: (user as any).supplierId || (user as any).supplier_id,
     });
 
     const response = NextResponse.json({ success: true, message: "Token refreshed successfully" });

@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import dbConnect from "@/lib/dbConnect";
-import User from "@/models/User";
+import { supabase } from "@/lib/supabase";
+import { UserRepository } from "@/repositories/UserRepository";
 import bcrypt from "bcryptjs";
 import { withValidation } from "@/lib/validate";
 import { resetPasswordSchema } from "@/lib/validations";
 
 async function handler(req: Request) {
   try {
-    await dbConnect();
     const body = await req.json();
     console.log("Reset Password Request Body:", body);
     
@@ -32,24 +31,28 @@ async function handler(req: Request) {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     // Find valid user (token matches and not expired)
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
+    const { data: dbUser, error: queryErr } = await supabase
+      .from("users")
+      .select("id")
+      .eq("reset_password_token", hashedToken)
+      .gt("reset_password_expires", new Date().toISOString())
+      .maybeSingle();
 
-    if (!user) {
+    if (queryErr) throw queryErr;
+
+    if (!dbUser) {
       return NextResponse.json({ success: false, message: "Invalid or expired reset token" }, { status: 400 });
     }
 
     // Set new password
     const hashed = await bcrypt.hash(newPassword, 10);
-    user.password = hashed;
     
-    // Clear reset tokens
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-
-    await user.save();
+    // Clear reset tokens and update password
+    await UserRepository.update(dbUser.id, {
+      password_hash: hashed,
+      reset_password_token: null,
+      reset_password_expires: null
+    });
 
     return NextResponse.json({
       success: true,

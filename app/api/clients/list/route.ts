@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Client from "@/models/Client";
+import { CustomerRepository } from "@/repositories/CustomerRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
-        
         // IDOR Protection: Always use salonId from JWT for owners
         const salonId = decoded.salonId;
 
@@ -21,7 +18,15 @@ async function handler(req: Request, decoded: any) {
             return NextResponse.json({ success: false, message: "salonId is required for admin view" }, { status: 400 });
         }
 
-        const clients = await Client.find({ salonId: targetSalonId }).sort({ lastVisit: -1 });
+        const clients = await CustomerRepository.find({ salonId: targetSalonId });
+        // The original code sorted by lastVisit. In Supabase, the repository does order("name") by default.
+        // We can sort in memory by lastVisit if needed, or leave as name-sorted. Let's sort in memory to preserve lastVisit sorting:
+        clients.sort((a: any, b: any) => {
+            const dateA = a.lastVisit ? new Date(a.lastVisit).getTime() : 0;
+            const dateB = b.lastVisit ? new Date(b.lastVisit).getTime() : 0;
+            return dateB - dateA;
+        });
+
         return NextResponse.json({ success: true, clients });
     } catch (error: any) {
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });

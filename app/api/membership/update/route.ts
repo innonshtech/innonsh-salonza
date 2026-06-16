@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Membership from "@/models/Membership";
+import { MembershipRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const body = await req.json();
     console.log("Update Membership request:", body);
     const { planId, name, price, validity, discount, benefits, isActive } = body;
@@ -30,7 +28,7 @@ async function handler(req: Request, decoded: any) {
     if (isActive !== undefined) updateData.isActive = isActive;
 
     // Find and verify ownership (IDOR Protection)
-    const membership = await Membership.findById(planId);
+    const membership = await MembershipRepository.findById(planId);
     if (!membership) {
       return NextResponse.json({ success: false, message: "Membership plan not found" }, { status: 404 });
     }
@@ -39,10 +37,9 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "Forbidden: You don't own this membership plan" }, { status: 403 });
     }
 
-    const updatedMembership = await Membership.findByIdAndUpdate(
+    const updatedMembership = await MembershipRepository.findByIdAndUpdate(
       planId,
-      { $set: updateData },
-      { new: true }
+      updateData
     );
 
     console.log("✅ Membership Updated:", updatedMembership);

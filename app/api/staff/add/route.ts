@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Staff from "@/models/Staff";
+import { StaffRepository } from "@/repositories/StaffRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const body = await req.json();
     const { name, phone, skills, profileImage } = body;
 
@@ -15,14 +13,13 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
     }
 
-    const staff = await Staff.create({
+    const staff = await StaffRepository.create({
       salonId,
       name,
       phone,
       skills,
       profileImage,
-      status: "available",
-      currentStatus: "available"
+      status: "available"
     });
 
     return NextResponse.json({ success: true, staff });

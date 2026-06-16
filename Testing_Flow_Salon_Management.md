@@ -25,9 +25,11 @@
    ```
 
 2. **Environment Variables**
-   Create `.env.local` in the project root:
+   Create `.env.local` or `.env` in the project root:
    ```
-   MONGODB_URI=your_mongodb_connection_string
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
    JWT_SECRET=your_jwt_secret_key
    CLOUDINARY_CLOUD_NAME=your_cloud_name (optional)
    CLOUDINARY_API_KEY=your_api_key (optional)
@@ -41,9 +43,8 @@
    Application runs at: `http://localhost:3000`
 
 4. **Database**
-   - Ensure MongoDB instance is running
-   - Run Prisma migrations (if applicable)
-   - Test connection via MongoDB Compass or similar tool
+   - Ensure Supabase instance is accessible
+   - Connect and verify tables schema (e.g. via Supabase Studio dashboard)
 
 ---
 

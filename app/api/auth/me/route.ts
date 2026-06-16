@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/apiAuth";
-import dbConnect from "@/lib/dbConnect";
-import User from "@/models/User";
-import Salon from "@/models/Salon";
+import { UserRepository } from "@/repositories/UserRepository";
+import { SalonRepository } from "@/repositories/SalonRepository";
 
 /**
  * GET /api/auth/me
@@ -11,15 +10,13 @@ import Salon from "@/models/Salon";
  */
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
-    
     const userId = decoded.userId || decoded.id;
     if (!userId) {
       return NextResponse.json({ success: false, message: "Invalid token payload" }, { status: 401 });
     }
 
     // Fetch the full user from the database to get the current role
-    const user = await User.findById(userId).select("-password");
+    const user = await UserRepository.findById(userId);
     if (!user) {
       return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
     }
@@ -27,7 +24,7 @@ async function handler(req: Request, decoded: any) {
     // Include the salon if it exists
     let salon = null;
     if (user.role === "salon_owner") {
-      salon = await Salon.findOne({ ownerId: user._id });
+      salon = await SalonRepository.findOne({ ownerId: user.id });
     }
 
     return NextResponse.json({

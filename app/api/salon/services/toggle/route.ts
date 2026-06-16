@@ -1,26 +1,23 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Service from "@/models/Service";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function patchHandler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const { serviceId } = await req.json();
 
     if (!serviceId) {
        return NextResponse.json({ success: false, message: "serviceId is required" }, { status: 400 });
     }
 
-    const currentService = await Service.findById(serviceId);
+    const currentService = await ServiceRepository.findById(serviceId);
     if (!currentService || currentService.salonId.toString() !== decoded.salonId.toString()) {
       return NextResponse.json({ success: false, message: "Forbidden: You don't own this service" }, { status: 403 });
     }
 
-    const updatedService = await Service.findByIdAndUpdate(
+    const updatedService = await ServiceRepository.update(
       serviceId,
-      { isActive: !currentService.isActive },
-      { new: true }
+      { is_active: !currentService.isActive }
     );
 
     return NextResponse.json({ success: true, service: updatedService });

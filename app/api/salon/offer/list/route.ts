@@ -1,12 +1,10 @@
 // /api/salon/offer/list/route.ts
 
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Offer from "@/models/Offer";
+import { OfferRepository } from "@/repositories/SupportRepositories";
 
 export async function GET(req: Request) {
     try {
-        await dbConnect();
         const { searchParams } = new URL(req.url);
         const salonId = searchParams.get("salonId");
 
@@ -14,7 +12,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ success: false, message: "salonId is required" });
         }
 
-        const offers = await Offer.find({ salonId }).sort({ createdAt: -1 });
+        const offers = await OfferRepository.find({ salonId });
 
         return NextResponse.json({
             success: true,

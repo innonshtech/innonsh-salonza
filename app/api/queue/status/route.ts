@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Queue from "@/models/Queue";
+import { QueueRepository } from "@/repositories/QueueRepository";
 
 export async function GET(req: Request) {
-  await dbConnect();
-
   const { searchParams } = new URL(req.url);
   const bookingId = searchParams.get("bookingId");
 
-  const queue = await Queue.findOne({ bookingId });
+  if (!bookingId) {
+    return NextResponse.json({ success: false, message: "bookingId required" }, { status: 400 });
+  }
+
+  const queue = await QueueRepository.findOne({ bookingId });
 
   if (!queue) return NextResponse.json({ success: false, message: "Not found" });
 

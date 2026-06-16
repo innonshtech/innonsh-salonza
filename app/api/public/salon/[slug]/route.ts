@@ -1,17 +1,14 @@
 // /api/public/salon/[slug]/route.ts
 
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
-import Service from "@/models/Service";
-import Testimonial from "@/models/Testimonial";
-import Offer from "@/models/Offer";
+import { SalonRepository } from "@/repositories/SalonRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
+import { TestimonialRepository, OfferRepository } from "@/repositories/SupportRepositories";
 
 export async function GET(req: Request, { params }: any) {
   try {
-    await dbConnect();
     const { slug } = await params;
-    const salon = await Salon.findOne({ slug }).lean();
+    const salon = await SalonRepository.findOne({ slug });
     if (!salon) {
       return NextResponse.json({
         success: false,
@@ -19,11 +16,10 @@ export async function GET(req: Request, { params }: any) {
       });
     }
 
-    // Since lean() is used, salon is a POJO. We cast it to ISalon or use its properties carefully.
     const salonData = salon as any;
-    const services = await Service.find({ salonId: salonData._id, isActive: { $ne: false } }).lean();
-    const testimonials = await Testimonial.find({ salonId: salonData._id }).lean();
-    const offers = await Offer.find({ salonId: salonData._id, isActive: true }).lean();
+    const services = await ServiceRepository.find({ salonId: salonData.id, isActive: true });
+    const testimonials = await TestimonialRepository.find({ salonId: salonData.id });
+    const offers = await OfferRepository.find({ salonId: salonData.id, isActive: true });
 
     return NextResponse.json({
       success: true,

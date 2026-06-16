@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Queue from "@/models/Queue";
+import { QueueRepository } from "@/repositories/QueueRepository";
 import fs from "fs";
 import path from "path";
 
@@ -16,7 +15,6 @@ function logToFile(msg: string) {
 
 export async function POST(req: Request) {
     try {
-        await dbConnect();
         const { items } = await req.json(); // Array of { id, position }
 
         if (!items || !Array.isArray(items)) {
@@ -26,7 +24,7 @@ export async function POST(req: Request) {
         logToFile(`REORDER API: Received ${items.length} items to reorder`);
 
         const updates = items.map(p =>
-            Queue.findByIdAndUpdate(p.id, { position: p.position })
+            QueueRepository.update(p.id, { position: p.position })
         );
 
         await Promise.all(updates);

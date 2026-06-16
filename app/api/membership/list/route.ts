@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Membership from "@/models/Membership";
+import { MembershipRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const salonId = decoded.salonId;
     console.log("Fetching Membership plans for salonId:", salonId);
 
@@ -18,7 +16,7 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "Unauthorized: No salon associated" }, { status: 403 });
     }
 
-    const memberships = await Membership.find(query).sort({ createdAt: -1 });
+    const memberships = await MembershipRepository.find(query);
     console.log("✅ Found plans:", memberships.length);
     return NextResponse.json({ success: true, data: memberships });
   } catch (error: any) {

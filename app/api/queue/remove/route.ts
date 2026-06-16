@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/apiAuth";
-import dbConnect from "@/lib/dbConnect";
-import Queue from "@/models/Queue";
-import Booking from "@/models/Booking";
-import Sale from "@/models/Sale";
-import Service from "@/models/Service";
+import { QueueRepository } from "@/repositories/QueueRepository";
+import { BookingRepository } from "@/repositories/BookingRepository";
+import { SaleRepository } from "@/repositories/SaleRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
+import { CustomerRepository } from "@/repositories/CustomerRepository";
+import { StaffRepository } from "@/repositories/StaffRepository";
 import { sendSMS } from "@/lib/notifications";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const { id, paymentMethod, paymentSplit, discount } = await req.json();
 
     const salonId = decoded.salonId;
@@ -18,7 +18,7 @@ async function handler(req: Request, decoded: any) {
     }
 
     // 1. Get the item and verify ownership
-    const item = await Queue.findById(id);
+    const item = await QueueRepository.findById(id);
     if (!item) return NextResponse.json({ success: false, message: "Item not found" }, { status: 404 });
 
     if (item.salonId.toString() !== salonId) {
@@ -39,14 +39,14 @@ async function handler(req: Request, decoded: any) {
         return NextResponse.json({ success: false, message: "No services associated with this queue item" }, { status: 400 });
       }
 
-      const services = await Service.find({ _id: { $in: finalServiceIds } });
-      const servicesData = services.map(s => ({
-        serviceId: s._id,
+      const services = await ServiceRepository.find({ _id: { $in: finalServiceIds } });
+      const servicesData = services.map((s: any) => ({
+        serviceId: s.id,
         name: s.name,
         price: s.price
       }));
 
-      const totalAmount = servicesData.reduce((sum, s) => sum + s.price, 0);
+      const totalAmount = servicesData.reduce((sum: number, s: any) => sum + s.price, 0);
       const discountAmount = discount?.amount || 0;
       const finalAmount = totalAmount - discountAmount;
 
@@ -55,14 +55,15 @@ async function handler(req: Request, decoded: any) {
       // 2.a Update linked booking (if exists)
       if (item.bookingId) {
         try {
-          const booking = await Booking.findById(item.bookingId);
+          const booking = await BookingRepository.findById(item.bookingId);
           if (booking) {
-            booking.status = "completed";
-            booking.paymentStatus = "paid";
-            booking.paidAmount = finalAmount;
-            booking.completedAt = new Date();
-            await booking.save();
-            console.log(`Booking ${booking._id} marked as completed & paid via queue completion`);
+            await BookingRepository.update(booking.id, {
+              status: "completed",
+              paymentStatus: "paid",
+              paidAmount: finalAmount,
+              completedAt: new Date()
+            });
+            console.log(`Booking ${booking.id} marked as completed & paid via queue completion`);
           }
         } catch (err) {
           console.error("Error updating linked booking:", err);
@@ -71,7 +72,7 @@ async function handler(req: Request, decoded: any) {
 
       // 2.b Create Sale (Single Source of Truth for Revenue Analytics)
       try {
-        const sale = await Sale.create({
+        const sale = await SaleRepository.create({
           salonId: item.salonId,
           staffId: item.staffId,
           customerName: item.customerName,
@@ -92,7 +93,12 @@ async function handler(req: Request, decoded: any) {
           date: new Date(),
           bookingId: item.bookingId // Link to booking if applicable
         });
-        console.log(`Sale created for queue item ${item._id}: ${sale._id}`);
+
+        if (!sale) {
+          throw new Error("Sale creation returned null");
+        }
+
+        console.log(`Sale created for queue item ${item.id}: ${sale.id}`);
       } catch (err) {
         console.error("Error creating sale:", err);
         return NextResponse.json({ success: false, message: "Failed to record sale" }, { status: 500 });
@@ -101,40 +107,48 @@ async function handler(req: Request, decoded: any) {
       // CRM Integration (for both booking and walk-in)
       if (item.customerPhone) {
         try {
-          const Client = (await import("@/models/Client")).default;
           const pointsEarned = Math.floor(finalAmount / 100);
 
-          await Client.findOneAndUpdate(
-            { salonId: item.salonId, phone: item.customerPhone },
-            {
-              $set: {
-                name: item.customerName,
-                lastVisit: new Date()
-              },
-              $inc: {
+          const existing = await CustomerRepository.findOne({ salonId: item.salonId, phone: item.customerPhone });
+          if (existing) {
+            await CustomerRepository.update(existing.id, {
+              name: item.customerName,
+              lastVisit: new Date().toISOString(),
+              totalVisits: (existing.totalVisits || 0) + 1,
+              totalSpent: (existing.totalSpent || 0) + finalAmount,
+              loyaltyPoints: (existing.loyaltyPoints || 0) + pointsEarned
+            });
+          } else {
+            await CustomerRepository.create({
+              salonId: item.salonId,
+              phone: item.customerPhone,
+              name: item.customerName,
+              loyaltyPoints: pointsEarned,
+              notes: ""
+            });
+            const fresh = await CustomerRepository.findOne({ salonId: item.salonId, phone: item.customerPhone });
+            if (fresh) {
+              await CustomerRepository.update(fresh.id, {
                 totalVisits: 1,
                 totalSpent: finalAmount,
-                loyaltyPoints: pointsEarned
-              }
-            },
-            { upsert: true, new: true }
-          );
+                lastVisit: new Date().toISOString()
+              });
+            }
+          }
           console.log("CRM updated for customer:", item.customerPhone);
         } catch (err) {
           console.error("Error updating CRM:", err);
-          // CRM failure shouldn't block payment completion
         }
       }
     }
 
     // 3. Remove the item
-    await Queue.findByIdAndDelete(id);
+    await QueueRepository.delete(id);
 
     // 3.a AUTO STATUS SYNC: Set staff back to available
     if (wasServing && item.staffId) {
       try {
-        const Staff = (await import("@/models/Staff")).default;
-        await Staff.findByIdAndUpdate(item.staffId, { 
+        await StaffRepository.update(item.staffId, { 
           status: "available",
           currentStatus: "available"
         });
@@ -145,25 +159,28 @@ async function handler(req: Request, decoded: any) {
     }
 
     // 4. Re-index waiting positions
-    const items = await Queue.find({
+    const items = await QueueRepository.find({
       salonId: salonId,
       status: "waiting"
-    }).sort({ position: 1, createdAt: 1 });
+    });
 
-    for (let i = 0; i < items.length; i++) {
-      items[i].position = i + 1;
-      await items[i].save();
+    // Sort items to ensure order
+    const sortedItems = [...items].sort((a, b) => (a.position || 0) - (b.position || 0));
+
+    for (let i = 0; i < sortedItems.length; i++) {
+      const pos = i + 1;
+      await QueueRepository.update(sortedItems[i].id, { position: pos });
     }
 
     // 5. Optionally notify
-    const notifyCount = Math.min(2, items.length);
+    const notifyCount = Math.min(2, sortedItems.length);
     for (let i = 0; i < notifyCount; i++) {
       try {
-        const it = items[i];
-        if ((it as any).customerPhone) {
+        const it = sortedItems[i];
+        if (it.customerPhone) {
           await sendSMS({
-            to: (it as any).customerPhone,
-            body: `Hi ${(it as any).customerName}, your position at the salon is now ${it.position}. See you soon!`,
+            to: it.customerPhone,
+            body: `Hi ${it.customerName}, your position at the salon is now ${i + 1}. See you soon!`,
           });
         }
       } catch (err) {

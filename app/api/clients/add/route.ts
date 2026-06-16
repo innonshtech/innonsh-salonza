@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Client from "@/models/Client";
+import { CustomerRepository } from "@/repositories/CustomerRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
         const body = await req.json();
 
         // IDOR Protection: Always use salonId from JWT
@@ -18,14 +16,14 @@ async function handler(req: Request, decoded: any) {
             return NextResponse.json({ success: false, message: "Name and Phone are required" }, { status: 400 });
         }
 
-        const client = await Client.create({
+        const client = await CustomerRepository.create({
             ...body,
             salonId: salonId // Overwrite any salonId from body
         });
         
         return NextResponse.json({ success: true, client });
     } catch (error: any) {
-        if (error.code === 11000) {
+        if (error.code === "23505" || (error.message && error.message.includes("unique_salon_customer_phone"))) {
             return NextResponse.json({ success: false, message: "A client with this phone number already exists." }, { status: 400 });
         }
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });

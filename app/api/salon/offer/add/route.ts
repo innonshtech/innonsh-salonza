@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Offer from "@/models/Offer";
+import { OfferRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const payload = await req.json();
 
     // IDOR Protection: Always use salonId from JWT
@@ -14,7 +12,7 @@ async function handler(req: Request, decoded: any) {
        return NextResponse.json({ success: false, message: "Forbidden: No salon associated" }, { status: 403 });
     }
 
-    await Offer.create({
+    await OfferRepository.create({
       ...payload,
       salonId: salonId // Overwrite body salonId
     });

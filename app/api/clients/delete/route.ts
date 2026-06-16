@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Client from "@/models/Client";
+import { CustomerRepository } from "@/repositories/CustomerRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const { id } = await req.json();
 
     // IDOR Protection: Always use salonId from JWT
@@ -19,12 +17,12 @@ async function handler(req: Request, decoded: any) {
     }
 
     // Verify ownership before deleting
-    const client = await Client.findOne({ _id: id, salonId });
-    if (!client) {
+    const client = await CustomerRepository.findById(id);
+    if (!client || client.salonId !== salonId) {
       return NextResponse.json({ success: false, message: "Client not found" }, { status: 404 });
     }
 
-    await Client.findByIdAndDelete(id);
+    await CustomerRepository.delete(id);
 
     return NextResponse.json({ success: true, message: "Client deleted successfully" });
   } catch (error: any) {

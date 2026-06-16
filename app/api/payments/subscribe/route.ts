@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Subscription from "@/models/Subscription";
+import { SubscriptionRepository } from "@/repositories/SupportRepositories";
 import { isPaymentsEnabled, getRazorpayInstance } from "@/lib/razorpay";
 
 export async function POST(req: Request) {
-  await dbConnect();
-
   const { salonId, planType } = await req.json();
 
   // Feature flag: Check if payments are enabled
@@ -13,7 +10,7 @@ export async function POST(req: Request) {
     // Create a mock subscription with trial status
     const mockSubscriptionId = `trial_${Date.now()}_${planType}`;
 
-    const newSub = await Subscription.create({
+    const newSub = await SubscriptionRepository.create({
       salonId,
       plan: planType,
       razorpaySubscriptionId: mockSubscriptionId,
@@ -57,7 +54,7 @@ export async function POST(req: Request) {
     customer_notify: 1,
   });
 
-  const newSub = await Subscription.create({
+  const newSub = await SubscriptionRepository.create({
     salonId,
     plan: planType,
     razorpaySubscriptionId: subscription.id,

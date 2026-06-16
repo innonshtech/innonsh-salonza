@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Booking from "@/models/Booking";
-import Queue from "@/models/Queue";
-import Service from "@/models/Service";
-import Sale from "@/models/Sale";
+import { BookingRepository } from "@/repositories/BookingRepository";
+import { QueueRepository } from "@/repositories/QueueRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
+import { SaleRepository } from "@/repositories/SaleRepository";
+import { supabase } from "@/lib/supabase";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
         // IDOR Protection: Always use salonId from JWT for owners
         const salonIdFromToken = decoded.salonId;
         if (!salonIdFromToken && decoded.role !== "super_admin") {
@@ -35,130 +34,109 @@ async function handler(req: Request, decoded: any) {
         // End of current month
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-        // Debug logs
-        console.log("Start of Month:", monthStart);
-        console.log("End of Month:", monthEnd);
-
         // AUTO-UPDATE STALE BOOKINGS: Mark past-dated upcoming bookings as completed
-        // This prevents stale data in dashboard
-        const autoUpdateResult = await Booking.updateMany(
-          {
-            salonId: targetSalonId,
-            status: "upcoming",
-            date: { $lt: now }
-          },
-          {
-            $set: {
-              status: "completed",
-              completedAt: now
-            }
-          }
-        );
-        if (autoUpdateResult.modifiedCount > 0) {
-          console.log(`Auto-updated ${autoUpdateResult.modifiedCount} stale booking(s) to completed`);
+        const { data: updatedData, error: updateErr } = await supabase
+          .from("bookings")
+          .update({
+            status: "completed",
+            completed_at: now.toISOString()
+          })
+          .eq("salon_id", targetSalonId)
+          .eq("status", "upcoming")
+          .lt("date", now.toISOString())
+          .select("id");
+          
+        if (updateErr) console.error("Error auto-updating bookings:", updateErr.message);
+        if (updatedData && updatedData.length > 0) {
+          console.log(`Auto-updated ${updatedData.length} stale booking(s) to completed`);
         }
 
         // 1. Today's Bookings
-        const todayBookingsCount = await Booking.countDocuments({
-            salonId: targetSalonId,
-            date: { $gte: todayStart, $lte: todayEnd }
-        });
+        const { count: todayBookingsCount, error: bCountErr } = await supabase
+            .from("bookings")
+            .select("*", { count: 'exact', head: true })
+            .eq("salon_id", targetSalonId)
+            .gte("date", todayStart.toISOString())
+            .lte("date", todayEnd.toISOString());
+        if (bCountErr) throw bCountErr;
 
-        // 2. Active Queue (Waiting or Unassigned status)
-        const activeQueueCount = await Queue.countDocuments({
-            salonId: targetSalonId,
-            status: { $ne: "serving" }
-        });
+        // 2. Active Queue (Waiting status)
+        const { count: activeQueueCount, error: qCountErr } = await supabase
+            .from("queue_items")
+            .select("*", { count: 'exact', head: true })
+            .eq("salon_id", targetSalonId)
+            .neq("status", "serving");
+        if (qCountErr) throw qCountErr;
 
         // 3. Total Services
-        const totalServicesCount = await Service.countDocuments({ salonId: targetSalonId });
-        const inactiveServicesCount = await Service.countDocuments({ salonId: targetSalonId, isActive: false });
+        const { count: totalServicesCount, error: sCountErr } = await supabase
+            .from("services")
+            .select("*", { count: 'exact', head: true })
+            .eq("salon_id", targetSalonId);
+        if (sCountErr) throw sCountErr;
+
+        const { count: inactiveServicesCount, error: isCountErr } = await supabase
+            .from("services")
+            .select("*", { count: 'exact', head: true })
+            .eq("salon_id", targetSalonId)
+            .eq("is_active", false);
+        if (isCountErr) throw isCountErr;
 
         // 4. Monthly Revenue from Bookings (completed + paid)
-        const bookingRevenueResult = await Booking.aggregate([
-            {
-                $match: {
-                    salonId: targetSalonId,
-                    status: "completed",
-                    paymentStatus: "paid",
-                    date: { $gte: monthStart, $lte: monthEnd }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    totalRevenue: { $sum: "$paidAmount" }
-                }
-            }
-        ]);
-        const bookingRevenue = bookingRevenueResult[0]?.totalRevenue || 0;
+        const { data: bookingRevData, error: bRevErr } = await supabase
+            .from("bookings")
+            .select("paid_amount")
+            .eq("salon_id", targetSalonId)
+            .eq("status", "completed")
+            .eq("payment_status", "paid")
+            .gte("date", monthStart.toISOString())
+            .lte("date", monthEnd.toISOString());
+        if (bRevErr) throw bRevErr;
+        const bookingRevenue = bookingRevData?.reduce((sum: number, b: any) => sum + Number(b.paid_amount || 0), 0) || 0;
 
         // 5. Monthly Revenue from Sales (queue completions)
-        const saleRevenueResult = await Sale.aggregate([
-            {
-                $match: {
-                    salonId: targetSalonId,
-                    date: { $gte: monthStart, $lte: monthEnd }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    totalRevenue: { $sum: "$finalAmount" }
-                }
-            }
-        ]);
-        const saleRevenue = saleRevenueResult[0]?.totalRevenue || 0;
+        const { data: saleRevData, error: sRevErr } = await supabase
+            .from("sales")
+            .select("final_amount")
+            .eq("salon_id", targetSalonId)
+            .gte("date", monthStart.toISOString())
+            .lte("date", monthEnd.toISOString());
+        if (sRevErr) throw sRevErr;
+        const saleRevenue = saleRevData?.reduce((sum: number, s: any) => sum + Number(s.final_amount || 0), 0) || 0;
 
         const monthlyRevenue = bookingRevenue + saleRevenue;
 
-        // Debug log
-        console.log("Revenue Calculation:", {
-          salonId: targetSalonId,
-          monthStart,
-          monthEnd,
-          bookingRevenue,
-          saleRevenue,
-          total: monthlyRevenue
+        // 5. Recent Activity (Latest 5 completed bookings)
+        const recentActivity = await BookingRepository.find({
+            salonId: targetSalonId,
+            status: "completed"
         });
 
-        // 5. Recent Activity (Latest 5 completed bookings)
-        const recentActivity = await Booking.find({
-            salonId: targetSalonId,
-            status: "completed",
-            completedAt: { $exists: true }
-        })
-            .populate("serviceIds")
-            .sort({ completedAt: -1 })
-            .limit(5)
-            .lean();
-
-        console.log("Recent Activity:", recentActivity);
-
-        const formattedActivity = recentActivity.map((b: any) => ({
-            _id: b._id,
-            name: b.customerName,
-            services: b.serviceIds?.map((s: any) => s.name).join(", ") || b.serviceId?.name || "Service",
-            date: b.completedAt,
-            status: b.status
-        }));
+        const formattedActivity = recentActivity
+            .filter((b: any) => b.completedAt)
+            .sort((a: any, b: any) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+            .slice(0, 5)
+            .map((b: any) => ({
+                _id: b.id,
+                name: b.customerName,
+                services: b.serviceIds?.map((s: any) => s.name).join(", ") || b.serviceId?.name || "Service",
+                date: b.completedAt,
+                status: b.status
+            }));
 
         // 6. Today's Schedule
-        const todaysSchedule = await Booking.find({
+        const todaysSchedule = await BookingRepository.find({
             salonId: targetSalonId,
             date: { $gte: todayStart, $lte: todayEnd }
-        })
-            .populate("serviceIds")
-            .sort({ date: 1 })
-            .lean();
+        });
 
         return NextResponse.json({
             success: true,
             stats: {
-                todayBookings: todayBookingsCount,
-                activeQueue: activeQueueCount,
-                totalServices: totalServicesCount,
-                inactiveServices: inactiveServicesCount,
+                todayBookings: todayBookingsCount || 0,
+                activeQueue: activeQueueCount || 0,
+                totalServices: totalServicesCount || 0,
+                inactiveServices: inactiveServicesCount || 0,
                 monthlyRevenue: monthlyRevenue,
             },
             recentActivity: formattedActivity,

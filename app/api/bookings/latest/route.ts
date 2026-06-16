@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server";
-import mongoose from "mongoose";
-import Booking from "@/models/Booking";
+import { BookingRepository } from "@/repositories/BookingRepository";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const salonId = searchParams.get("salonId");
 
-    if (!salonId || !mongoose.Types.ObjectId.isValid(salonId)) {
+    if (!salonId) {
       return NextResponse.json({ success: false, message: "Invalid Salon ID" }, { status: 400 });
     }
 
-    if (mongoose.connection.readyState !== 1) {
-      await mongoose.connect(process.env.MONGODB_URI as string);
-    }
-
     // Find the single most recently created booking
-    const latestBooking = await Booking.findOne({ salonId })
-      .sort({ createdAt: -1 })
-      .select('createdAt customerName')
-      .populate('serviceIds', 'name') // We only populate name so the payload is tiny
-      .lean() as any;
+    const latestBooking = await BookingRepository.findOne({ salonId });
 
     if (!latestBooking) {
       return NextResponse.json({

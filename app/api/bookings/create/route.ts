@@ -1,26 +1,25 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
-import Service from "@/models/Service";
-import Booking from "@/models/Booking";
+import { SalonRepository } from "@/repositories/SalonRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
+import { BookingRepository } from "@/repositories/BookingRepository";
+import { UserRepository } from "@/repositories/UserRepository";
 import { sendEmail, sendSMS } from "@/lib/notifications";
 import { withValidation } from "@/lib/validate";
 import { bookingCreateSchema } from "@/lib/validations";
 
 async function handler(req: Request) {
   try {
-    await dbConnect();
     const { salonSlug, serviceId, customerName, customerPhone, date } = await req.json();
 
-    const salon = await Salon.findOne({ slug: salonSlug });
+    const salon = await SalonRepository.findOne({ slug: salonSlug });
     if (!salon) return NextResponse.json({ success: false, message: "Salon not found" });
 
-    const service = await Service.findById(serviceId);
+    const service = await ServiceRepository.findById(serviceId);
     if (!service) return NextResponse.json({ success: false, message: "Service not found" });
 
     // create booking with total price and duration
-    const booking = await Booking.create({
-      salonId: salon._id,
+    const booking = await BookingRepository.create({
+      salonId: salon.id,
       serviceId,
       customerName,
       customerPhone,
@@ -29,6 +28,10 @@ async function handler(req: Request) {
       totalPrice: service.price,
       totalDuration: service.duration,
     });
+
+    if (!booking) {
+      return NextResponse.json({ success: false, message: "Failed to create booking" }, { status: 500 });
+    }
 
     // Notify customer via SMS (if phone provided)
     if (customerPhone) {
@@ -43,7 +46,7 @@ async function handler(req: Request) {
     // Notify salon owner by email
     if (salon.ownerId) {
       // fetch owner email (lightweight)
-      const owner = await (await import("@/models/User")).default.findById(salon.ownerId);
+      const owner = await UserRepository.findById(salon.ownerId);
       if (owner?.email) {
         const subject = `New booking: ${customerName} — ${service.name}`;
         const html = `<p>New booking for <strong>${service.name}</strong></p>

@@ -65,6 +65,26 @@ export function withAuth(handler: Function, allowedRoles?: string[]) {
         return NextResponse.json({ success: false, message }, { status });
       }
 
+      // If salonId is missing from JWT payload, check database to see if it was recently added (e.g. after setup or migration)
+      if (!decoded.salonId && (decoded.userId || decoded.id)) {
+        try {
+          const { supabase } = require("./supabase");
+          if (supabase) {
+            const { data: dbUser } = await supabase
+              .from("users")
+              .select("salon_id")
+              .eq("id", decoded.userId || decoded.id)
+              .maybeSingle();
+
+            if (dbUser && dbUser.salon_id) {
+              decoded.salonId = dbUser.salon_id;
+            }
+          }
+        } catch (dbErr) {
+          console.error("apiAuth: Failed to retrieve salon_id fallback:", dbErr);
+        }
+      }
+
       // 3. Optional: Role check
       if (allowedRoles && allowedRoles.length > 0) {
         if (!decoded.role || !allowedRoles.includes(decoded.role)) {

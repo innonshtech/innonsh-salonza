@@ -1,11 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import User from "@/models/User";
-import Session from "@/models/Session";
+import { UserRepository } from "@/repositories/UserRepository";
+import { SessionRepository } from "@/repositories/SupportRepositories";
+import { SalonRepository } from "@/repositories/SalonRepository";
 import bcrypt from "bcryptjs";
 import { generateToken, generateRefreshToken } from "@/lib/auth";
 import { env } from "@/lib/env";
-import Salon from "@/models/Salon";
 import { withValidation } from "@/lib/validate";
 import { loginSchema } from "@/lib/validations";
 import { withRateLimit } from "@/lib/rateLimit";
@@ -13,11 +12,10 @@ import { securityLogger, auditLogger } from "@/lib/logger";
 
 async function handler(req: NextRequest) {
   try {
-    await dbConnect();
     const { email, password } = await req.json();
     console.log("Login attempt for email:", email);
-    console.log("Password received:", password ? "Yes" : "No");
-    const user = await User.findOne({ email });
+    
+    const user = await UserRepository.findByEmail(email);
     if (!user) {
       return NextResponse.json({ success: false, message: "User not found" });
     }
@@ -54,13 +52,13 @@ async function handler(req: NextRequest) {
 
     // create JWT
     const token = generateToken({ 
-      userId: user._id,
+      userId: user.id,
       role: user.role,
-      salonId: user.salonId // Add this
+      salonId: user.salonId
     });
     
     const refreshToken = generateRefreshToken({ 
-      userId: user._id,
+      userId: user.id,
     });
     
     // --- Session Tracking & Admin Protection ---
@@ -69,21 +67,19 @@ async function handler(req: NextRequest) {
     
     // Suspicious Activity Detection for Admins
     if (user.role === "super_admin") {
-      const pastSessions = await Session.find({ userId: user._id }).sort({ lastActive: -1 }).limit(5);
-      const knownIps = pastSessions.map(s => s.ip);
+      const pastSessions = await SessionRepository.find({ userId: user.id });
+      const knownIps = pastSessions.map((s: any) => s.ip);
       if (knownIps.length > 0 && !knownIps.includes(ip)) {
         securityLogger.warn(`Super Admin logged in from completely new IP: ${ip}`, { event: "admin_suspicious_login", email: user.email, ip });
-        // In a real system, we might trigger an email alert here.
       }
     }
 
     // Save Session
-    // We store a hashed version of the refresh token to identify the session uniquely without storing the raw token
     const crypto = require('crypto');
     const hashedSessionToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
     
-    await Session.create({
-      userId: user._id,
+    await SessionRepository.create({
+      userId: user.id,
       token: hashedSessionToken,
       userAgent,
       ip,
@@ -91,13 +87,13 @@ async function handler(req: NextRequest) {
     });
     // -------------------------------------------
     
-    auditLogger.info("User successfully logged in", { event: "successful_login", email: user.email, userId: user._id, role: user.role, ip });
+    auditLogger.info("User successfully logged in", { event: "successful_login", email: user.email, userId: user.id, role: user.role, ip });
 
     const response = NextResponse.json({
       success: true,
       message: "Login successful",
       user,
-      salon: await Salon.findOne({ ownerId: user._id })
+      salon: await SalonRepository.findOne({ ownerId: user.id })
     });
 
     response.cookies.set("authToken", token, {

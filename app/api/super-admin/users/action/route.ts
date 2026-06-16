@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import User from "@/models/User";
+import { UserRepository } from "@/repositories/UserRepository";
 
 export async function POST(req: Request) {
     try {
-        await dbConnect();
         const { userId, action } = await req.json(); // action: "verify" or "reject"
 
         if (!userId || !action) {
@@ -13,13 +11,15 @@ export async function POST(req: Request) {
 
         const status = action === "verify" ? "verified" : "rejected";
 
-        const user = await User.findByIdAndUpdate(userId, {
-            verificationStatus: status
-        }, { new: true });
-
-        if (!user) {
+        // Check if user exists
+        const existingUser = await UserRepository.findById(userId);
+        if (!existingUser) {
             return NextResponse.json({ success: false, message: "User not found" });
         }
+
+        const user = await UserRepository.update(userId, {
+            verification_status: status
+        });
 
         return NextResponse.json({
             success: true,

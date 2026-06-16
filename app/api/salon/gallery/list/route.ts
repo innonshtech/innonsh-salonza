@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
+import { SalonRepository } from "@/repositories/SalonRepository";
 
 export async function GET(req: NextRequest) {
   try {
-    await dbConnect();
-
     const { searchParams } = new URL(req.url);
     const salonId = searchParams.get("salonId");
 
@@ -16,7 +13,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const salon = await Salon.findById(salonId).lean();
+    const salon = await SalonRepository.findById(salonId);
 
     if (!salon) {
       return NextResponse.json(
@@ -25,11 +22,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const salonData = salon as any;
-
     return NextResponse.json({
       success: true,
-      gallery: salonData.gallery || [],
+      gallery: salon.gallery || [],
     });
   } catch (error: any) {
     console.error("Gallery List Error:", error);

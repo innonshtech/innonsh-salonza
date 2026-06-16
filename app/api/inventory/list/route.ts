@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Product from "@/models/Product";
+import { InventoryRepository } from "@/repositories/InventoryRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
-        
         // IDOR Protection: Always use salonId from JWT for owners
         const salonId = decoded.salonId;
         if (!salonId && decoded.role !== "super_admin") {
@@ -20,7 +17,7 @@ async function handler(req: Request, decoded: any) {
             return NextResponse.json({ success: false, message: "Salon ID required for admin view" }, { status: 400 });
         }
 
-        const products = await Product.find({ salonId: targetSalonId }).sort({ name: 1 });
+        const products = await InventoryRepository.find({ salonId: targetSalonId });
         return NextResponse.json({ success: true, products });
     } catch (error: any) {
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });

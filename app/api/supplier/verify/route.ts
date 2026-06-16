@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import User from "@/models/User";
+import { UserRepository } from "@/repositories/UserRepository";
 
 export async function POST(req: Request) {
     try {
-        await dbConnect();
         const {
             userId,
             businessName,
@@ -17,17 +15,19 @@ export async function POST(req: Request) {
             return NextResponse.json({ success: false, message: "Missing required fields" });
         }
 
-        const user = await User.findByIdAndUpdate(userId, {
-            businessName,
-            gstNumber,
-            businessAddress,
-            businessDescription,
-            verificationStatus: "pending"
-        }, { new: true });
-
-        if (!user) {
+        // Verify the user exists first
+        const existingUser = await UserRepository.findById(userId);
+        if (!existingUser) {
             return NextResponse.json({ success: false, message: "User not found" });
         }
+
+        const user = await UserRepository.update(userId, {
+            business_name: businessName,
+            gst_number: gstNumber,
+            business_address: businessAddress,
+            business_description: businessDescription,
+            verification_status: "pending"
+        });
 
         return NextResponse.json({
             success: true,

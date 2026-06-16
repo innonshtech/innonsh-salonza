@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import MarketplaceProduct from "@/models/MarketplaceProduct";
+import { MarketplaceProductRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function postHandler(req: Request, decoded: any) {
     try {
-        await dbConnect();
         const body = await req.json();
 
         if (!body.name || !body.price) {
             return NextResponse.json({ success: false, message: "Missing required fields" });
         }
 
-        const product = await MarketplaceProduct.create({
+        const product = await MarketplaceProductRepository.create({
             ...body,
             supplierId: decoded.userId // Get supplierId from authenticated session
         });

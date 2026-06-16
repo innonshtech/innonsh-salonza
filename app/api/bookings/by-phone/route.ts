@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Booking from "@/models/Booking";
+import { BookingRepository } from "@/repositories/BookingRepository";
 
 export async function GET(req: Request) {
   try {
-    await dbConnect();
-
     const { searchParams } = new URL(req.url);
     const phone = searchParams.get("phone");
 
@@ -13,9 +10,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: "Phone required" });
     }
 
-    const bookings = await Booking.find({ customerPhone: phone })
-      .populate("services")
-      .sort({ createdAt: -1 });
+    const bookings = await BookingRepository.find({ customerPhone: phone });
 
     return NextResponse.json({
       success: true,

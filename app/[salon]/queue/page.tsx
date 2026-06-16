@@ -1,7 +1,6 @@
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
-import Queue from "@/models/Queue";
-import Service from "@/models/Service";
+import { SalonRepository } from "@/repositories/SalonRepository";
+import { QueueRepository } from "@/repositories/QueueRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
 import {
   Users,
   Clock,
@@ -14,11 +13,9 @@ import {
 import Link from "next/link";
 
 export default async function QueuePage({ params }: any) {
-  await dbConnect();
-
   const { salon: slug } = await params;
 
-  const salon = (await Salon.findOne({ slug }).lean()) as any;
+  const salon = await SalonRepository.findOne({ slug });
 
   if (!salon) {
     return (
@@ -34,17 +31,17 @@ export default async function QueuePage({ params }: any) {
     );
   }
 
-  const queueRaw = await Queue.find({ salonId: salon._id }).sort({ position: 1, createdAt: 1 }).lean();
+  const queueRaw = await QueueRepository.find({ salonId: salon.id });
   const queue = queueRaw.map((item: any) => ({
     ...item,
     status: item.status || "waiting"
   }));
   const servingItems = queue.filter((i: any) => i.status === "serving");
   const waitingItems = queue.filter((i: any) => i.status === "waiting");
-  const services = await Service.find({ salonId: salon._id }).lean();
+  const services = await ServiceRepository.find({ salonId: salon.id });
 
   const serviceMap: any = {};
-  services.forEach((s: any) => (serviceMap[s._id.toString()] = s));
+  services.forEach((s: any) => (serviceMap[s.id.toString()] = s));
 
   // Calculate wait times
   const avgServiceTime = 30; // minutes
@@ -175,7 +172,7 @@ export default async function QueuePage({ params }: any) {
                   </div>
                 ) : (
                   servingItems.map((item: any) => (
-                    <div key={item._id.toString()} className="relative flex items-center p-5 rounded-xl border-2 border-green-200 bg-green-50/30">
+                    <div key={item.id.toString()} className="relative flex items-center p-5 rounded-xl border-2 border-green-200 bg-green-50/30">
                       <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
                         <span className="font-bold text-green-700">{item.customerName?.charAt(0).toUpperCase()}</span>
                       </div>
@@ -204,7 +201,7 @@ export default async function QueuePage({ params }: any) {
                   </div>
                 ) : (
                   waitingItems.map((item: any) => (
-                    <div key={item._id.toString()} className="relative flex items-center p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div key={item.id.toString()} className="relative flex items-center p-5 rounded-xl border border-slate-200 bg-white shadow-sm">
                       <div className="absolute -left-3 -top-3 w-8 h-8 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center text-xs font-bold text-purple-600 shadow-sm">
                         #{item.position}
                       </div>

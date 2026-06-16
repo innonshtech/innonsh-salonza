@@ -1,7 +1,6 @@
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
-import Service from "@/models/Service";
-import Offer from "@/models/Offer";
+import { SalonRepository } from "@/repositories/SalonRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
+import { OfferRepository } from "@/repositories/SupportRepositories";
 import {
   MapPin,
   Phone,
@@ -32,9 +31,7 @@ import Image from "next/image";
 export default async function SalonPublicPage({ params }: any) {
   const { salon } = await params;
 
-  await dbConnect();
-
-  const salonDoc = (await Salon.findOne({ slug: salon }).lean()) as any;
+  const salonDoc = await SalonRepository.findOne({ slug: salon });
 
   if (!salonDoc) {
     return (
@@ -61,8 +58,8 @@ export default async function SalonPublicPage({ params }: any) {
     );
   }
 
-  const services = await Service.find({ salonId: salonDoc._id, isActive: { $ne: false } }).lean();
-  const offers = await Offer.find({ salonId: salonDoc._id, isActive: true }).lean();
+  const services = await ServiceRepository.find({ salonId: salonDoc.id, isActive: true });
+  const offers = await OfferRepository.find({ salonId: salonDoc.id, isActive: true });
 
   return (
     <div className="min-h-screen bg-white">
@@ -297,7 +294,7 @@ export default async function SalonPublicPage({ params }: any) {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {services.map((service: any, index: number) => (
                 <div
-                  key={service._id.toString()}
+                  key={service.id.toString()}
                   className="group bg-white rounded-3xl shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-purple-200/50 border border-slate-100 hover:border-purple-200 p-8 transition-all duration-300 transform hover:-translate-y-2"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -537,7 +534,7 @@ export default async function SalonPublicPage({ params }: any) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {offers.map((offer: any, index: number) => (
                 <div
-                  key={offer._id.toString()}
+                  key={offer.id.toString()}
                   className={`relative overflow-hidden bg-gradient-to-br ${index % 2 === 0 ? 'from-purple-600 to-pink-600' : 'from-blue-600 to-indigo-600'
                     } rounded-3xl p-10 text-white shadow-2xl shadow-purple-500/30`}
                 >

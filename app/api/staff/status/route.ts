@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Staff from "@/models/Staff";
+import { StaffRepository } from "@/repositories/StaffRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const { staffId, status } = await req.json();
 
     const allowedStatuses = ["available", "busy", "break", "offline"];
@@ -14,15 +12,14 @@ async function handler(req: Request, decoded: any) {
     }
 
     // IDOR Protection: Verify ownership
-    const staffMember = await Staff.findById(staffId);
+    const staffMember = await StaffRepository.findById(staffId);
     if (!staffMember || staffMember.salonId.toString() !== decoded.salonId.toString()) {
        return NextResponse.json({ success: false, message: "Forbidden: You do not own this resource" }, { status: 403 });
     }
 
-    const updatedStaff = await Staff.findByIdAndUpdate(
+    const updatedStaff = await StaffRepository.update(
       staffId,
-      { status: status, currentStatus: status },
-      { new: true }
+      { status: status, currentStatus: status }
     );
 
     return NextResponse.json({ success: true, staff: updatedStaff });

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Queue from "@/models/Queue";
-import Booking from "@/models/Booking";
-import Staff from "@/models/Staff";
+import { QueueRepository } from "@/repositories/QueueRepository";
+import { BookingRepository } from "@/repositories/BookingRepository";
+import { StaffRepository } from "@/repositories/StaffRepository";
 import fs from "fs";
 import path from "path";
 
@@ -23,7 +22,7 @@ export async function POST(req: Request) {
 
         // VALIDATION: Check if staff is available
         if (staffId) {
-            const staff = await Staff.findById(staffId);
+            const staff = await StaffRepository.findById(staffId);
             if (!staff) {
                 return NextResponse.json({ success: false, message: "Staff not found" }, { status: 404 });
             }
@@ -31,9 +30,10 @@ export async function POST(req: Request) {
                 return NextResponse.json({ success: false, message: `Staff is currently on ${staff.status}` }, { status: 400 });
             }
             // Auto update staff status to busy
-            staff.status = "busy";
-            (staff as any).currentStatus = "busy";
-            await staff.save();
+            await StaffRepository.update(staffId, {
+              status: "busy",
+              currentStatus: "busy"
+            });
             logToFile(`STAFF UPDATE: Staff ${staffId} set to busy`);
         }
 
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
             updateData.staffId = staffId;
         }
 
-        const item = await Queue.findByIdAndUpdate(id, updateData, { new: true });
+        const item = await QueueRepository.update(id, updateData);
 
         if (!item) {
             logToFile(`API ERROR: Item not found for ID: ${id}`);
@@ -58,16 +58,10 @@ export async function POST(req: Request) {
         // IMPORTANT: If this queue item is linked to a booking, update the booking status to "in-progress"
         if (item.bookingId) {
             try {
-                const bookingUpdate = await Booking.findByIdAndUpdate(
-                    item.bookingId,
-                    {
-                        $set: {
-                            status: "in-progress",
-                            startedAt: new Date()
-                        }
-                    },
-                    { new: true }
-                );
+                const bookingUpdate = await BookingRepository.update(item.bookingId, {
+                    status: "in-progress",
+                    startedAt: new Date()
+                });
                 if (bookingUpdate) {
                     logToFile(`API BOOKING UPDATE: Linked booking ${item.bookingId} marked as in-progress`);
                 } else {
@@ -75,26 +69,22 @@ export async function POST(req: Request) {
                 }
             } catch (err: any) {
                 logToFile(`API ERROR updating booking: ${err.message}`);
-                // Continue even if booking update fails - we still want to serve the customer
             }
         }
 
         // Re-index remaining waiting items
-        const waitingItems = await Queue.find({
-            salonId: item.salonId,
-            status: { $ne: "serving" }
-        }).sort({ position: 1, createdAt: 1 });
+        const waitingItems = await QueueRepository.find({
+            salonId: item.salonId
+        });
 
-        logToFile(`API REINDEX: Found ${waitingItems.length} items to re-index for salon ${item.salonId}`);
+        const sortedWaiting = waitingItems
+            .filter((wi: any) => wi && wi.status !== "serving")
+            .sort((a: any, b: any) => (a.position || 0) - (b.position || 0));
 
-        for (let i = 0; i < waitingItems.length; i++) {
-            // Defensive check: Ensure we don't accidentally re-index a serving item
-            if (waitingItems[i].status === "serving") {
-                logToFile(`API WARNING: Found serving item ${waitingItems[i]._id} in waiting list find! Skipping re-index.`);
-                continue;
-            }
-            waitingItems[i].position = i + 1;
-            await waitingItems[i].save();
+        logToFile(`API REINDEX: Found ${sortedWaiting.length} items to re-index for salon ${item.salonId}`);
+
+        for (let i = 0; i < sortedWaiting.length; i++) {
+            await QueueRepository.update(sortedWaiting[i].id, { position: i + 1 });
         }
 
         logToFile(`API DONE: Success for ID: ${id}`);

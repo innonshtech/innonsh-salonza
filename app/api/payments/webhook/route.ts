@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Subscription from "@/models/Subscription";
+import { SubscriptionRepository } from "@/repositories/SupportRepositories";
 import { isPaymentsEnabled } from "@/lib/razorpay";
 
 export async function POST(req: Request) {
-  await dbConnect();
 
   // Feature flag: Ignore webhooks when payments are disabled
   if (!isPaymentsEnabled()) {
@@ -25,14 +23,14 @@ export async function POST(req: Request) {
   }
 
   if (event === "subscription.activated") {
-    await Subscription.findOneAndUpdate(
+    await SubscriptionRepository.findOneAndUpdate(
       { razorpaySubscriptionId: subId },
       { status: "active" }
     );
   }
 
   if (event === "subscription.halted" || event === "subscription.completed") {
-    await Subscription.findOneAndUpdate(
+    await SubscriptionRepository.findOneAndUpdate(
       { razorpaySubscriptionId: subId },
       { status: "expired" }
     );

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Membership from "@/models/Membership";
+import { MembershipRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const body = await req.json();
     console.log("Delete Membership request:", body);
     const { planId } = body;
@@ -21,7 +19,7 @@ async function handler(req: Request, decoded: any) {
     }
 
     // Find and verify ownership
-    const membership = await Membership.findById(planId);
+    const membership = await MembershipRepository.findById(planId);
     if (!membership) {
       return NextResponse.json({ success: false, message: "Membership plan not found" }, { status: 404 });
     }
@@ -30,7 +28,7 @@ async function handler(req: Request, decoded: any) {
       return NextResponse.json({ success: false, message: "Forbidden: You don't own this membership plan" }, { status: 403 });
     }
 
-    await Membership.findByIdAndDelete(planId);
+    await MembershipRepository.findByIdAndDelete(planId);
 
     console.log("✅ Deleted Membership plan:", planId);
     return NextResponse.json({ success: true, message: "Membership plan deleted successfully" });

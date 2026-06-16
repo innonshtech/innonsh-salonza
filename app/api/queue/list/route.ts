@@ -1,20 +1,17 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/apiAuth";
-import dbConnect from "@/lib/dbConnect";
-import Queue from "@/models/Queue";
-import Service from "@/models/Service";
+import { QueueRepository } from "@/repositories/QueueRepository";
+import { ServiceRepository } from "@/repositories/ServiceRepository";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
-
     // Use salonId from JWT for security
     const salonId = decoded.salonId;
     if (!salonId) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });
     }
 
-    const queue = await Queue.find({ salonId }).sort({ position: 1 }).lean();
+    const queue = await QueueRepository.find({ salonId });
 
     // 1. Sort the queue using Smart Logic: Booked > Walk-in, then by scheduledAt
     const sortedQueue = [...queue].sort((a: any, b: any) => {
@@ -38,8 +35,8 @@ async function handler(req: Request, decoded: any) {
     const now = Date.now();
 
     // Fetch all services for the current salon to use as a fallback/cache
-    const salonServices = await Service.find({ salonId }).lean();
-    const serviceMap = new Map(salonServices.map((s: any) => [s._id.toString(), s]));
+    const salonServices = await ServiceRepository.find({ salonId });
+    const serviceMap = new Map(salonServices.map((s: any) => [s.id.toString(), s]));
 
     const enrichedQueue = sortedQueue.map((item: any) => {
         // Items currently being served have 0 wait time remaining
@@ -55,7 +52,7 @@ async function handler(req: Request, decoded: any) {
         // Priority 2: If duration is still 0, calculate from serviceIds using master list
         if (duration === 0 && item.serviceIds && item.serviceIds.length > 0) {
             duration = item.serviceIds.reduce((sum: number, sid: any) => {
-                const s = serviceMap.get(sid.toString());
+                const s = serviceMap.get(sid.toString()) as any;
                 return sum + Number(s?.duration || 0);
             }, 0);
         }
@@ -72,7 +69,7 @@ async function handler(req: Request, decoded: any) {
 
         return {
             ...item,
-            _id: item._id.toString(),
+            _id: item.id.toString(),
             staffId: item.staffId ? item.staffId.toString() : undefined,
             status: item.status || "waiting",
             totalDuration: duration,

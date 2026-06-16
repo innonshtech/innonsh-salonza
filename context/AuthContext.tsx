@@ -19,7 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch("/api/auth/me");
       
       if (!res.ok) {
-        // 401 or 403 means no valid cookie
+        // 401 or 403 means no valid cookie. Clear stale credentials.
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("salon");
+        setUser(null);
+        setToken(null);
         setLoading(false);
         return;
       }
@@ -30,6 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data.user);
         // Sync with local storage just for UI persistence (non-critical)
         localStorage.setItem("user", JSON.stringify(data.user));
+        if (data.salon) {
+          localStorage.setItem("salon", JSON.stringify(data.salon));
+        } else {
+          localStorage.removeItem("salon");
+        }
       } else {
         // Token might be invalid or expired
         logout();
@@ -51,6 +61,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("user", JSON.stringify(userData));
     if (salon) {
       localStorage.setItem("salon", JSON.stringify(salon));
+    } else {
+      localStorage.removeItem("salon");
     }
     setUser(userData);
     setToken(token); // keeping in state just in case, though cookie is source of truth

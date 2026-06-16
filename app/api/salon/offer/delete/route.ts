@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Offer from "@/models/Offer";
+import { OfferRepository } from "@/repositories/SupportRepositories";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
         const { offerId } = await req.json();
 
         if (!offerId) {
@@ -13,12 +11,12 @@ async function handler(req: Request, decoded: any) {
         }
 
         // Verify ownership
-        const offer = await Offer.findById(offerId);
+        const offer = await OfferRepository.findById(offerId);
         if (!offer || offer.salonId.toString() !== decoded.salonId.toString()) {
             return NextResponse.json({ success: false, message: "Forbidden: You do not own this offer" }, { status: 403 });
         }
 
-        await Offer.findByIdAndDelete(offerId);
+        await OfferRepository.deleteOne({ _id: offerId });
 
         return NextResponse.json({
             success: true,

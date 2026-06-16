@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Salon from "@/models/Salon";
+import { SalonRepository } from "@/repositories/SalonRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
   try {
-    await dbConnect();
     const { imageUrl } = await req.json();
 
     // IDOR Protection: Always use salonId from JWT
@@ -14,7 +12,7 @@ async function handler(req: Request, decoded: any) {
        return NextResponse.json({ success: false, message: "Forbidden: No salon associated" }, { status: 403 });
     }
 
-    await Salon.findByIdAndUpdate(salonId, {
+    await SalonRepository.findByIdAndUpdate(salonId, {
       $push: { gallery: imageUrl }
     });
 

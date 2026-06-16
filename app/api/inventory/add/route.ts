@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Product from "@/models/Product";
+import { InventoryRepository } from "@/repositories/InventoryRepository";
 import { withAuth } from "@/lib/apiAuth";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
         const body = await req.json();
 
         // IDOR Protection: Always use salonId from JWT
@@ -18,7 +16,7 @@ async function handler(req: Request, decoded: any) {
             return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
         }
 
-        const product = await Product.create({
+        const product = await InventoryRepository.create({
             ...body,
             salonId: salonId // Overwrite any salonId from body
         });

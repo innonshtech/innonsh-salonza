@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/apiAuth";
-import dbConnect from "@/lib/dbConnect";
-import Sale from "@/models/Sale";
-import Staff from "@/models/Staff";
-import mongoose from "mongoose";
+import { SaleRepository } from "@/repositories/SaleRepository";
+import { StaffRepository } from "@/repositories/StaffRepository";
 
 async function handler(req: Request, decoded: any) {
     try {
-        await dbConnect();
         const { searchParams } = new URL(req.url);
         const type = searchParams.get("type") || "daily"; // daily, monthly, quarterly, yearly
         const dateStr = searchParams.get("date") || new Date().toISOString();
@@ -41,22 +38,17 @@ async function handler(req: Request, decoded: any) {
 
         console.log(`[Revenue Analytics] Range: ${start.toISOString()} - ${end.toISOString()}`);
 
-        // Ensure we are connected
-        await dbConnect();
-
-        const salonObjectId = new mongoose.Types.ObjectId(salonId);
-
         // Fetch all sales in range
         console.log("[Revenue Analytics] Querying Sales...");
-        const sales = await Sale.find({
-            salonId: salonObjectId,
+        const sales = await SaleRepository.find({
+            salonId,
             date: { $gte: start, $lte: end }
-        }).sort({ date: -1 }).lean();
+        });
         console.log(`[Revenue Analytics] Found ${sales.length} sales.`);
 
         // Fetch Staff for names and grouping
         console.log("[Revenue Analytics] Querying Staff...");
-        const staffList = await Staff.find({ salonId: salonObjectId }).lean();
+        const staffList = await StaffRepository.find({ salonId });
         console.log(`[Revenue Analytics] Found ${staffList.length} staff.`);
 
         // Calculate Overview Stats
@@ -70,7 +62,7 @@ async function handler(req: Request, decoded: any) {
 
         // Map Staff for grouping names and lookup
         const staffMap = staffList.reduce((acc: any, s: any) => {
-            acc[s._id.toString()] = { 
+            acc[s.id.toString()] = { 
                 staffName: s.name, 
                 active: s.active
             };
@@ -82,8 +74,8 @@ async function handler(req: Request, decoded: any) {
         
         // Initialize with all staff
         staffList.forEach((s: any) => {
-            staffWiseMap[s._id.toString()] = {
-                staffId: s._id.toString(),
+            staffWiseMap[s.id.toString()] = {
+                staffId: s.id.toString(),
                 staffName: s.name,
                 active: s.active,
                 totalAmount: 0,
@@ -117,7 +109,7 @@ async function handler(req: Request, decoded: any) {
             
             const normalizedSale = {
                 ...sale,
-                _id: sale._id.toString(),
+                _id: sale.id.toString(),
                 serviceNames: sale.services?.map((s: any) => s.name) || [sale.serviceId?.name || "Service"]
             };
 
