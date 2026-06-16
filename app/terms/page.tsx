@@ -106,7 +106,7 @@ export default function TermsOfService() {
           <h1>Terms of Service</h1>
           <p>These terms set out the agreement between you and Innonsh Salonza when you access or use our platform. Please read them carefully.</p>
           <div className="updated">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 2" />
             </svg>
@@ -133,7 +133,7 @@ export default function TermsOfService() {
 
         <main className="content">
           <div className={`note-legal ${revealedSections.includes('note-legal') ? 'in' : ''}`} id="note-legal" data-reveal>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
               <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               <path d="M12 9v4M12 17h.01" />
             </svg>
@@ -183,7 +183,7 @@ export default function TermsOfService() {
             <p>As between you and us, you own your Customer Data. You grant us a limited licence to host, process, and use it solely to provide and improve the Service and as instructed by you.</p>
             <div className="callout">
               <span className="ci">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </span>
