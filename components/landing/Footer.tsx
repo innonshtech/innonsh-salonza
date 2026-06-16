@@ -10,10 +10,8 @@ export default function Footer() {
             </a>
             <p>The operating system for modern salons. One platform to run, grow, and love your business.</p>
             <div className="socials">
-              <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" /></svg></a>
-              <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></svg></a>
-              <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 2a2 2 0 110 4 2 2 0 010-4z" /></svg></a>
-              <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 12s0-3.5-.46-5.2a2.78 2.78 0 00-1.94-2C18.88 4.27 12 4.27 12 4.27s-6.88 0-8.6.53a2.78 2.78 0 00-1.94 2C1 8.5 1 12 1 12s0 3.5.46 5.2a2.78 2.78 0 001.94 2c1.72.53 8.6.53 8.6.53s6.88 0 8.6-.53a2.78 2.78 0 001.94-2C23 15.5 23 12 23 12zM10 15.5v-7l6 3.5z" /></svg></a>
+              <a href="https://www.instagram.com/innonsh.tech/" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><path d="M17.5 6.5h.01" /></svg></a>
+              <a href="https://www.linkedin.com/company/innonsh-technologies/posts/?feedView=all" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-4 0v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 2a2 2 0 110 4 2 2 0 010-4z" /></svg></a>
             </div>
           </div>
           <div className="foot-col">
@@ -42,11 +40,9 @@ export default function Footer() {
           </div>
           <div className="foot-col">
             <h4>Contact</h4>
-            <a href="#">Book a demo</a>
-            <a href="#">Talk to sales</a>
-            <a href="#">Help center</a>
-            <a href="#">hello@salonos.com</a>
-            <a href="#">Status</a>
+            <a href="mailto:info@innonsh.com">info@innonsh.com</a>
+            <a href="tel:+917620301874">+91 76203 01874</a>
+            <span style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.55)', display: 'block', padding: '7px 0' }}>Pune, Maharashtra</span>
           </div>
         </div>
         <div className="foot-bottom">
