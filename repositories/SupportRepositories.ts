@@ -42,7 +42,7 @@ export class SessionRepository {
     }
     const { data, error } = await builder.order("last_active", { ascending: false });
     if (error) throw error;
-    return data.map(s => ({
+    return data.map((s: any) => ({
       _id: s.id,
       userId: s.user_id,
       token: s.token,
@@ -130,7 +130,7 @@ export class MembershipRepository {
 
     const { data, error } = await builder.order("name", { ascending: true });
     if (error) throw error;
-    return data.map(m => ({
+    return data.map((m: any) => ({
       _id: m.id,
       id: m.id,
       salonId: m.salon_id,
@@ -249,7 +249,7 @@ export class OfferRepository {
 
     const { data, error } = await builder.order("created_at", { ascending: false });
     if (error) throw error;
-    return data.map(o => ({
+    return data.map((o: any) => ({
       _id: o.id,
       id: o.id,
       salonId: o.salon_id,
@@ -350,7 +350,7 @@ export class TestimonialRepository {
 
     const { data, error } = await builder.order("created_at", { ascending: false });
     if (error) throw error;
-    return data.map(t => ({
+    return data.map((t: any) => ({
       _id: t.id,
       id: t.id,
       salonId: t.salon_id,
@@ -405,7 +405,7 @@ export class FeedbackRepository {
 
     const { data, error } = await builder.order("created_at", { ascending: false });
     if (error) throw error;
-    return data.map(f => ({
+    return data.map((f: any) => ({
       _id: f.id,
       id: f.id,
       salonId: f.salon_id,
@@ -644,7 +644,7 @@ export class MarketplaceProductRepository {
 
     const { data, error } = await builder.order("created_at", { ascending: false });
     if (error) throw error;
-    return data.map(p => this.mapToModel(p));
+    return data.map((p: any) => this.mapToModel(p));
   }
 
   static async countDocuments(query: { supplierId: string }) {
@@ -745,7 +745,7 @@ export class SupplierOrderRepository {
 
     const { data, error } = await builder.order("created_at", { ascending: false });
     if (error) throw error;
-    return data.map(o => this.mapToModel(o));
+    return data.map((o: any) => this.mapToModel(o));
   }
 
   static async create(orderData: {

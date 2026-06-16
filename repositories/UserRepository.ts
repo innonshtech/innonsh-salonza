@@ -132,6 +132,6 @@ export class UserRepository {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data.map(u => this.mapToModel(u));
+    return data.map((u: any) => this.mapToModel(u));
   }
 }

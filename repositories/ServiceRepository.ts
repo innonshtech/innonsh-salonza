@@ -61,7 +61,7 @@ export class ServiceRepository {
 
     const { data, error } = await builder;
     if (error) throw error;
-    return data.map(s => this.mapToModel(s));
+    return data.map((s: any) => this.mapToModel(s));
   }
 
   static async create(serviceData: {
