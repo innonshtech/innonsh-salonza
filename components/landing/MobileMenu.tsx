@@ -6,7 +6,7 @@ export default function MobileMenu() {
       <a href="#roles">Roles</a>
       <a href="#impact">Results</a>
       <a href="#how">How it works</a>
-      <a href="/contact" className="btn btn-primary">Contact Sales</a>
+      <a href="#cta" className="btn btn-primary">Contact Sales</a>
     </aside>
   );
 }

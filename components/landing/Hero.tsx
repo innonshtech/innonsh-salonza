@@ -9,7 +9,7 @@ export default function Hero() {
       <h1 className="h-display" data-anim>Run your entire salon from one <span className="gradient-text">intelligent platform</span></h1>
       <p className="lead" data-anim>Innonsh Salonza helps salons automate appointments, billing, inventory, staff management, customer engagement, and business analytics from one unified dashboard.</p>
       <div className="hero-actions" data-anim>
-        <a href="/contact" className="btn btn-primary" data-magnetic>Contact Sales
+        <a href="#cta" className="btn btn-primary" data-magnetic>Contact Sales
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
         <a href="#experience" className="btn btn-ghost" data-magnetic>

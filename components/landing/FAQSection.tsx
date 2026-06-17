@@ -57,7 +57,7 @@ export default function FAQSection() {
           </h2>
           <p className="text-xl text-slate-600">
             Everything you need to know about Innonsh Salonza. Can&apos;t find what you&apos;re looking for? 
-            <a href="/contact" className="text-purple-600 hover:underline ml-1">Contact us</a>
+            <a href="/#cta" className="text-purple-600 hover:underline ml-1">Contact us</a>
           </p>
         </div>
 
@@ -122,7 +122,7 @@ export default function FAQSection() {
               Our friendly team is here to help you get started
             </p>
             <a
-              href="/contact"
+              href="/#cta"
               className="inline-block px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
             >
               Contact Support

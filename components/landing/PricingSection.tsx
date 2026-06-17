@@ -203,7 +203,7 @@ export default function PricingSection() {
             All plans include 14-day free trial • No credit card required • Cancel anytime
           </p>
           <p className="text-slate-500 text-sm">
-            Need a custom plan for multiple locations? <Link href="/contact" className="text-purple-600 hover:underline font-semibold">Contact us</Link>
+            Need a custom plan for multiple locations? <Link href="/#cta" className="text-purple-600 hover:underline font-semibold">Contact us</Link>
           </p>
         </div>
       </div>
