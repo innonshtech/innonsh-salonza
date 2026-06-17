@@ -149,7 +149,7 @@ export default function TermsOfService() {
           </section>
 
           <section id="definitions" className={revealedSections.includes('definitions') ? 'in' : ''} data-reveal>
-            <h2><span class="n">2</span>Definitions</h2>
+            <h2><span className="n">2</span>Definitions</h2>
             <ul>
               <li><b>Service</b> means the Innonsh Salonza web and mobile applications, dashboards, APIs, and related features.</li>
               <li><b>Account</b> means the account you create to access the Service.</li>
@@ -160,13 +160,13 @@ export default function TermsOfService() {
           </section>
 
           <section id="accounts" className={revealedSections.includes('accounts') ? 'in' : ''} data-reveal>
-            <h2><span class="n">3</span>Eligibility and accounts</h2>
+            <h2><span className="n">3</span>Eligibility and accounts</h2>
             <p>You must be at least 18 years old and capable of forming a binding contract to use the Service. The Service is intended for business use.</p>
             <p>You are responsible for the accuracy of your registration details, for all activity under your Account, and for keeping your credentials secure. You must notify us promptly of any unauthorised use. You are responsible for your Authorised Users&apos; compliance with these Terms.</p>
           </section>
 
           <section id="subscriptions" className={revealedSections.includes('subscriptions') ? 'in' : ''} data-reveal>
-            <h2><span class="n">4</span>Subscriptions and billing</h2>
+            <h2><span className="n">4</span>Subscriptions and billing</h2>
             <ul>
               <li><b>Fees.</b> Access to paid features requires a Subscription. Fees, billing frequency, and inclusions are set out at the point of purchase or in an order form.</li>
               <li><b>Trials.</b> We may offer a free trial of <span className="fill">14 days</span>. Unless you cancel before it ends, your Subscription may begin and fees may apply.</li>
@@ -179,7 +179,7 @@ export default function TermsOfService() {
           </section>
 
           <section id="data" className={revealedSections.includes('data') ? 'in' : ''} data-reveal>
-            <h2><span class="n">5</span>Your data and privacy</h2>
+            <h2><span className="n">5</span>Your data and privacy</h2>
             <p>As between you and us, you own your Customer Data. You grant us a limited licence to host, process, and use it solely to provide and improve the Service and as instructed by you.</p>
             <div className="callout">
               <span className="ci">
@@ -193,7 +193,7 @@ export default function TermsOfService() {
           </section>
 
           <section id="acceptable" className={revealedSections.includes('acceptable') ? 'in' : ''} data-reveal>
-            <h2><span class="n">6</span>Acceptable use</h2>
+            <h2><span className="n">6</span>Acceptable use</h2>
             <p>You agree not to, and not to allow others to:</p>
             <ul>
               <li>Use the Service unlawfully, or to store or transmit unlawful, infringing, or harmful content.</li>
@@ -207,63 +207,63 @@ export default function TermsOfService() {
           </section>
 
           <section id="ip" className={revealedSections.includes('ip') ? 'in' : ''} data-reveal>
-            <h2><span class="n">7</span>Intellectual property</h2>
+            <h2><span className="n">7</span>Intellectual property</h2>
             <p>The Service, including its software, design, trademarks, and content we provide, is owned by Innonsh Technologies or its licensors and is protected by intellectual property laws. We grant you a limited, non-exclusive, non-transferable right to use the Service during your Subscription, subject to these Terms. All rights not expressly granted are reserved.</p>
             <p>If you provide feedback or suggestions, you grant us a perpetual, royalty free right to use them without obligation to you.</p>
           </section>
 
           <section id="thirdparty" className={revealedSections.includes('thirdparty') ? 'in' : ''} data-reveal>
-            <h2><span class="n">8</span>Third-party services</h2>
+            <h2><span className="n">8</span>Third-party services</h2>
             <p>The Service may integrate with third-party products, such as payment processors or messaging providers. Your use of those products is governed by their own terms, and we are not responsible for them. We may stop supporting an integration where a third party changes or discontinues its service.</p>
           </section>
 
           <section id="availability" className={revealedSections.includes('availability') ? 'in' : ''} data-reveal>
-            <h2><span class="n">9</span>Availability and support</h2>
+            <h2><span className="n">9</span>Availability and support</h2>
             <p>We aim to keep the Service available and reliable, targeting <span className="fill">99.9%</span> uptime, but we do not guarantee uninterrupted access. We may perform scheduled maintenance and will aim to give reasonable notice where it is likely to cause significant disruption.</p>
             <p>Support is provided as described in your plan or at <span className="fill">info@innonsh.com</span>.</p>
           </section>
 
           <section id="confidentiality" className={revealedSections.includes('confidentiality') ? 'in' : ''} data-reveal>
-            <h2><span class="n">10</span>Confidentiality</h2>
+            <h2><span className="n">10</span>Confidentiality</h2>
             <p>Each party may access confidential information of the other. Each party agrees to protect the other&apos;s confidential information with reasonable care and to use it only to perform under these Terms, except where disclosure is required by law. This does not apply to information that is public, independently developed, or rightfully obtained from another source.</p>
           </section>
 
           <section id="warranties" className={revealedSections.includes('warranties') ? 'in' : ''} data-reveal>
-            <h2><span class="n">11</span>Warranties and disclaimers</h2>
+            <h2><span className="n">11</span>Warranties and disclaimers</h2>
             <p>We will provide the Service with reasonable skill and care. Except as expressly stated in these Terms, the Service is provided &quot;as is&quot; and &quot;as available&quot;, and to the maximum extent permitted by law we disclaim all other warranties, whether express or implied, including warranties of merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the Service will be error free or uninterrupted.</p>
           </section>
 
           <section id="liability" className={revealedSections.includes('liability') ? 'in' : ''} data-reveal>
-            <h2><span class="n">12</span>Limitation of liability</h2>
+            <h2><span className="n">12</span>Limitation of liability</h2>
             <p>To the maximum extent permitted by law, neither party will be liable for indirect, incidental, special, consequential, or punitive damages, or for loss of profits, revenue, goodwill, or data, arising out of or relating to these Terms.</p>
             <p>To the maximum extent permitted by law, our total aggregate liability arising out of or relating to these Terms will not exceed <span className="fill">the fees you paid to us in the 12 months before the claim</span>. Nothing in these Terms limits liability that cannot be limited by law.</p>
           </section>
 
           <section id="indemnity" className={revealedSections.includes('indemnity') ? 'in' : ''} data-reveal>
-            <h2><span class="n">13</span>Indemnification</h2>
+            <h2><span className="n">13</span>Indemnification</h2>
             <p>You agree to indemnify and hold Innonsh Technologies harmless from claims, losses, and expenses arising out of your Customer Data, your use of the Service in breach of these Terms, or your violation of applicable law or the rights of a third party.</p>
           </section>
 
           <section id="termination" className={revealedSections.includes('termination') ? 'in' : ''} data-reveal>
-            <h2><span class="n">14</span>Term and termination</h2>
+            <h2><span className="n">14</span>Term and termination</h2>
             <p>These Terms apply for as long as you use the Service. You may cancel your Subscription at any time, effective at the end of your current billing period.</p>
             <p>We may suspend or terminate your access if you materially breach these Terms, fail to pay fees, or use the Service in a way that poses a risk to us or others. We will give notice where reasonable and practical.</p>
             <p>On termination, your right to use the Service ends. We will make Customer Data available for export for <span className="fill">30 days</span>, after which we may delete it in line with our Privacy Policy and the DPA. Provisions that by their nature should survive termination will do so.</p>
           </section>
 
           <section id="changes" className={revealedSections.includes('changes') ? 'in' : ''} data-reveal>
-            <h2><span class="n">15</span>Changes to the service and terms</h2>
+            <h2><span className="n">15</span>Changes to the service and terms</h2>
             <p>We may update the Service and these Terms from time to time. When we make material changes to these Terms, we will update the date above and, where appropriate, notify you. Your continued use of the Service after changes take effect means you accept the updated Terms.</p>
           </section>
 
           <section id="law" className={revealedSections.includes('law') ? 'in' : ''} data-reveal>
-            <h2><span class="n">16</span>Governing law and disputes</h2>
+            <h2><span className="n">16</span>Governing law and disputes</h2>
             <p>These Terms are governed by the laws of India. Subject to the dispute resolution process below, the courts at <span className="fill">Pune, Maharashtra</span> will have exclusive jurisdiction.</p>
             <p>The parties will first try to resolve any dispute amicably. If it cannot be resolved within <span className="fill">30 days</span>, the dispute will be referred to arbitration under the Arbitration and Conciliation Act, 1996, seated at <span className="fill">Pune, Maharashtra</span>, conducted in English by a sole arbitrator.</p>
           </section>
 
           <section id="general" className={revealedSections.includes('general') ? 'in' : ''} data-reveal>
-            <h2><span class="n">17</span>General</h2>
+            <h2><span className="n">17</span>General</h2>
             <ul>
               <li><b>Entire agreement.</b> These Terms, with any order form, the DPA, and the Privacy Policy, are the entire agreement between us on this subject.</li>
               <li><b>Assignment.</b> You may not assign these Terms without our consent. We may assign them in connection with a merger, acquisition, or sale of assets.</li>
@@ -275,7 +275,7 @@ export default function TermsOfService() {
           </section>
 
           <section id="contact" className={revealedSections.includes('contact') ? 'in' : ''} data-reveal>
-            <h2><span class="n">18</span>Contact us</h2>
+            <h2><span className="n">18</span>Contact us</h2>
             <p>Questions about these Terms can be sent to:</p>
             <ul>
               <li><b>Email</b> <span className="fill">info@innonsh.com</span></li>
